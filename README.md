@@ -1,5 +1,8 @@
 # 自建 TVBox 源（TVBoxOSD / Cloudflare Pages）
 
+> 个人使用的TVbox源文件
+
+
 基于 `qist/tvbox` 的 `jsm.json` 整理而来的自用 TVBox 配置（本地副本已重命名为
 `zlw-redmitv.json`），已补齐全部依赖文件，
 可直接部署到 Cloudflare Pages，红米电视上用 TVBoxOSD 订阅即可。
