@@ -1,0 +1,8 @@
+# TVBox 配置文件与爬虫脚本经 HTTP 直接投喂给电视端, 统一保持 LF
+* text=auto eol=lf
+
+# 二进制文件不做任何换行转换
+*.jar binary
+*.ico binary
+*.png binary
+*.jpg binary
