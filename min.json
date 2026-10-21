@@ -1,0 +1,11 @@
+{
+  "spider": "./jar/spider.jar;md5;4a35e9a49f5872ea0a4358e5424e657a",
+  "sites": [
+    {
+      "key": "t1",
+      "name": "量子影视",
+      "type": 1,
+      "api": "https://cj.lziapi.com/api.php/provide/vod/"
+    }
+  ]
+}
