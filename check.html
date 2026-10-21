@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TVBox 源依赖自检</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:24px 16px;background:#0f1115;color:#e6e6e6;
+ font:14px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:20px;margin:0 0 4px}
+.sub{color:#8b949e;font-size:12px;margin-bottom:18px}
+button{background:#238636;color:#fff;border:0;border-radius:6px;padding:10px 18px;
+ font-size:15px;cursor:pointer;margin-bottom:18px}
+button:disabled{opacity:.5}
+.bar{height:6px;background:#21262d;border-radius:3px;overflow:hidden;margin-bottom:18px}
+.bar>i{display:block;height:100%;width:0;background:#58a6ff;transition:width .2s}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #21262d;vertical-align:top}
+th{color:#8b949e;font-weight:500}
+td.n{font-family:ui-monospace,Consolas,monospace;word-break:break-all;font-size:12px}
+.ok{color:#3fb950}.bad{color:#f85149}.wait{color:#d29922}
+.summary{padding:12px 14px;border-radius:8px;margin-bottom:18px;font-size:14px}
+.summary.ok{background:#12261a;border:1px solid #1f6f33}
+.summary.bad{background:#2a1214;border:1px solid #6e2229}
+code{background:#161b22;padding:2px 6px;border-radius:4px;font-size:12px;color:#79c0ff}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>TVBox 源依赖自检</h1>
+<div class="sub">在电视浏览器打开本页，点击下方按钮逐个探测依赖文件</div>
+<button id="go">开始检测</button>
+<div class="bar"><i id="prog"></i></div>
+<div id="sum" class="summary wait">等待检测…</div>
+<table>
+<thead><tr><th style="width:46px">状态</th><th style="width:64px">HTTP</th><th>文件</th><th style="width:78px">大小</th><th style="width:120px">校验</th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+<script>
+const CONFIG='./zlw-redmitv.json';
+const JAR_MD5='4a35e9a49f5872ea0a4358e5424e657a';
+const FILES=[
+ ['./zlw-redmitv.json','主配置'],
+ ['./jar/spider.jar','爬虫核心(jar)'],
+ ['./jar/spider.txt','爬虫核心(txt)'],
+ ['./jar/fan.txt','对照jar(fan.txt)'],
+ ['./fty-copy.json','对照配置'],
+ ['./lib/drpy2.min.js','drpy2引擎'],
+ ['./tvboxtv-25.txt','25频道直播源']
+];
+const b=a=>Array.from(new Uint8Array(a)).map(x=>x.toString(16).padStart(2,'0')).join('');
+function md5hex(buf){return crypto.subtle.digest('MD5',buf).then(b).catch(()=>'n/a')}
+const rows=document.getElementById('rows'),sum=document.getElementById('sum'),prog=document.getElementById('prog');
+function row(label,cls){const tr=document.createElement('tr');
+ tr.innerHTML='<td class="'+cls+'">'+(cls==='ok'?'OK':cls==='bad'?'FAIL':'...')+'</td><td>-</td><td class="n">'+label+'</td><td>-</td><td>-</td>';
+ rows.appendChild(tr);return tr}
+async function probe(url){
+ const r=await fetch(url+'?_='+Date.now(),{cache:'no-store'});
+ if(!r.ok)throw new Error('HTTP '+r.status);
+ const buf=await r.arrayBuffer();return{buf,len:buf.byteLength,head:b(new Uint8Array(buf.slice(0,4)))};
+}
+document.getElementById('go').onclick=async function(){
+ this.disabled=true;rows.innerHTML='';sum.className='summary wait';sum.textContent='检测中…';
+ let bad=0;
+ for(let i=0;i<FILES.length;i++){
+  const[url,label]=FILES[i];const tr=row(label,'wait');
+  try{
+   const{len,head}=await probe(url);
+   tr.children[1].textContent='200';
+   tr.children[3].textContent=len>=1024?(len/1024).toFixed(0)+' KB':len+' B';
+   if(url.endsWith('.jar')||url.endsWith('.txt')){
+    const magic=head.slice(0,2);
+    if(magic==='504b'){tr.children[4].innerHTML='<span class="ok">ZIP ok</span>';tr.className='ok';tr.children[0].textContent='OK'}
+    else{tr.children[4].innerHTML='<span class="bad">非ZIP</span>';tr.className='bad';tr.children[0].textContent='FAIL';bad++}
+   }else{tr.children[4].textContent='-';tr.className='ok';tr.children[0].textContent='OK'}
+  }catch(e){tr.children[1].textContent='ERR';tr.children[4].innerHTML='<span class="bad">'+e.message+'</span>';tr.className='bad';tr.children[0].textContent='FAIL';bad++}
+  prog.style.width=Math.round((i+1)/FILES.length*100)+'%';
+ }
+ sum.className='summary '+(bad?'bad':'ok');
+ sum.innerHTML=bad?('发现 <b>'+bad+'</b> 个文件无法访问。<br>TVBox 会因缺少 <code>jar/spider.jar</code> 报 <b>jar load err</b>。请重新部署整个目录。'):'全部文件可访问。<br>若 TVBox 仍报 jar load err，请把本页截图发我。';
+ this.disabled=false;
+};
+</script>
+</body>
+</html>
