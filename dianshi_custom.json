@@ -1,5 +1,5 @@
 {
-  "spider": "https://tvbox.361026.xyz/spider.jar",
+  "spider": "./jar/spider.jar",
   "lives": [
     {
       "name": "live",
