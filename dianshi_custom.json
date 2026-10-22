@@ -51,7 +51,8 @@
       "api": "csp_YGP",
       "searchable": 0
     },
-    "key": "ds05",
+    {
+      "key": "ds05",
       "name": "🍀都司资源",
       "type": 0,
       "api": "http://y.ds05.cn/zyapi.php",
