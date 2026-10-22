@@ -51,7 +51,7 @@
       "api": "csp_YGP",
       "searchable": 0
     },
-    {"key": "玩偶","name": "👽玩偶哥哥┃4K弹幕","type": 3,"api": "csp_WoGGGuard","timeout": 30,"searchable": 1,"quickSearch": 1,"changeable": 1,"jar": "https://ghproxy.net/https://raw.githubusercontent.com/chanriver/mytvbox-source/main/jar/spider.jar","ext": {"Cloud-drive": "tvfan/Cloud-drive.txt"}},
+    {"key": "玩偶","name": "👽玩偶哥哥┃4K弹幕","type": 3,"api": "csp_WoGGGuard","timeout": 30,"searchable": 1,"quickSearch": 1,"changeable": 1,"jar": "https://ghproxy.net/https://raw.githubusercontent.com/chanriver/mytvbox-source/main/jar/fan.txt","ext": {"Cloud-drive": "tvfan/Cloud-drive.txt"}},
     {
       "key": "csp_Xinsj",
       "name": "🐼新视觉〔SP〕",
