@@ -79,7 +79,7 @@
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
-      "jar": “https://ghproxy.net/https://raw.githubusercontent.com/chanriver/mytvbox-source/main/jar/spider.jar”，
+      "jar": "https://ghproxy.net/https://raw.githubusercontent.com/chanriver/mytvbox-source/main/jar/spider.jar",
       "changeable": 1,
       "ext": {
         "分类url": "http://ntfeiyu.com/nt/{cateId}/area/{area}/by/{by}/class/{class}/lang/{lang}/page/{catePg}/year/{year}.html",
