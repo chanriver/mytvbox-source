@@ -51,66 +51,6 @@
       "api": "csp_YGP",
       "searchable": 0
     },
-    {"key": "玩偶","name": "👽玩偶哥哥┃4K弹幕","type": 3,"api": "csp_WoGGGuard","timeout": 30,"searchable": 1,"quickSearch": 1,"changeable": 1,"jar": "https://ghproxy.net/https://raw.githubusercontent.com/chanriver/mytvbox-source/main/jar/fan.txt","ext": {"Cloud-drive": "tvfan/Cloud-drive.txt"}},
-    {
-      "key": "csp_Xinsj",
-      "name": "🐼新视觉〔SP〕",
-      "type": 3,
-      "api": "csp_Xinsj",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "jar": "https://ghproxy.com/https://raw.githubusercontent.com/xianyuyimu/TVBOX-/main/%E4%B8%80%E6%9C%A8%E6%BA%90/JAR/%E6%8E%A8%E8%8D%90%E5%8C%85jar/%E6%96%B0%E8%A7%86%E8%A7%89.jar"
-    },
-    "key": "ds05",
-      "name": "🍀都司资源",
-      "type": 0,
-      "api": "http://y.ds05.cn/zyapi.php",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "categories": [
-        "电影",
-        "电视剧",
-        "综艺",
-        "动漫",
-        "动作片",
-        "爱情片",
-        "科幻片",
-        "恐怖片",
-        "战争片",
-        "喜剧片",
-        "纪录片",
-        "剧情片",
-        "大陆剧",
-        "港台剧",
-        "欧美剧",
-        "日韩剧",
-        "短剧",
-        "动画片"
-      ]
-    },
-        {
-      "key": "csp_xBPQ_爱看影视",
-      "name": "💖爱看影视〔SP〕",
-      "type": 3,
-      "api": "csp_xBPQ",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0,
-      "ext": "https://ghproxy.com/https://raw.githubusercontent.com/xianyuyimu/TVBOX-/main/一木源/JSON/推荐包/爱看.json"
-    },
-    {
-      "key": "Lgyy",
-      "name": " 📽 蓝光〔SP〕",
-      "type": "3",
-      "api": "csp_Dora",
-      "searchable": "1",
-      "quickSearch": "1",
-      "filterable": "1",
-      "ext": "b2e573ff040fcd54b50475660ee1a7d1",
-      "jar": "https://ghproxy.com/https://raw.githubusercontent.com/xianyuyimu/TVBOX-/main/%E4%B8%80%E6%9C%A8%E6%BA%90/JAR/%E6%8E%A8%E8%8D%90%E5%8C%85jar/%E8%93%9D%E5%85%89.jar"
-    },
     {
       "key": "新闪雷",
       "name": "新闪雷 • MP4",
@@ -139,7 +79,6 @@
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
-      "jar": "https://ghproxy.net/https://raw.githubusercontent.com/chanriver/mytvbox-source/main/jar/spider.jar",
       "changeable": 1,
       "ext": {
         "分类url": "http://ntfeiyu.com/nt/{cateId}/area/{area}/by/{by}/class/{class}/lang/{lang}/page/{catePg}/year/{year}.html",
@@ -242,8 +181,7 @@
       "api": "csp_AppYQK",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0,
-      "jar": "https://ghproxy.net/https://raw.githubusercontent.com/chanriver/mytvbox-source/main/jar/spider.jar"
+      "filterable": 0
     },
     {
       "key": "番茄影视",
@@ -1348,6 +1286,28 @@
       "api": "https://bfzyapi.com/api.php/provide/vod/?ac=list",
       "searchable": 1,
       "changeable": 1
+    },
+    {
+      "key": "非凡采集",
+      "name": "影视 • 非凡采集",
+      "type": 1,
+      "api": "https://cj.ffzyapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "changeable": 1,
+      "playerType": 2
+    },
+    {
+      "key": "迅游采集",
+      "name": "影视 • 迅游采集",
+      "type": 1,
+      "api": "https://api.xyzyapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "changeable": 1,
+      "playerType": 2
     },
     {
       "key": "Ncat",
