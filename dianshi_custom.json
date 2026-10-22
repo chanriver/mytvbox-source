@@ -132,66 +132,6 @@
       }
     },
     {
-      "key": "italkbbtv",
-      "name": "ITalkBB • 外",
-      "type": 3,
-      "api": "./py/ITalkBBTV.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0,
-      "changeable": 1
-    },
-    {
-      "key": "OleLive",
-      "name": "欧乐影院 • 外",
-      "type": 3,
-      "api": "./py/OleLive.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "changeable": 1
-    },
-    {
-      "key": "华数",
-      "name": "华数 • 影视",
-      "type": 3,
-      "api": "./py/华数.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "changeable": 1
-    },
-    {
-      "key": "华谊影视",
-      "name": "华谊 • 影视",
-      "type": 3,
-      "api": "./py/华谊影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "changeable": 1
-    },
-    {
-      "key": "Didahd",
-      "name": "嘀嗒影视",
-      "type": 3,
-      "api": "./py/Didahd.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0,
-      "changeable": 1
-    },
-    {
-      "key": "TVB云播",
-      "name": "TVB云播",
-      "type": 3,
-      "api": "./py/TVB云播.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0,
-      "changeable": 1
-    },
-    {
       "key": "热播影视",
       "name": "热播 • APP",
       "type": 3,
@@ -714,13 +654,6 @@
         "type": "list"
       },
       "timeout": 60
-    },
-    {
-      "key": "红果短剧",
-      "name": "红果 • 短剧",
-      "type": 3,
-      "api": "./py/红果短剧.py",
-      "genre": "shortdrama"
     },
     {
       "key": "七猫短剧",
@@ -1337,16 +1270,6 @@
       "filterable": 1,
       "changeable": 1,
       "playerType": 2
-    },
-    {
-      "key": "Ncat",
-      "name": "网飞猫",
-      "type": 3,
-      "api": "./py/Ncat.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0,
-      "changeable": 1
     },
     {
       "key": "drpy_js_360影视",
