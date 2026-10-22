@@ -182,7 +182,8 @@
       "api": "csp_AppYQK",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "jar": "https://ghproxy.net/https://raw.githubusercontent.com/chanriver/mytvbox-source/main/jar/spider.jar"
     },
     {
       "key": "番茄影视",
