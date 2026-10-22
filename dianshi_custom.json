@@ -52,6 +52,16 @@
       "searchable": 0
     },
     {
+      "key": "csp_Xinsj",
+      "name": "🐼新视觉〔SP〕",
+      "type": 3,
+      "api": "csp_Xinsj",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "jar": "https://ghproxy.com/https://raw.githubusercontent.com/xianyuyimu/TVBOX-/main/%E4%B8%80%E6%9C%A8%E6%BA%90/JAR/%E6%8E%A8%E8%8D%90%E5%8C%85jar/%E6%96%B0%E8%A7%86%E8%A7%89.jar"
+    },
+    {
       "key": "新闪雷",
       "name": "新闪雷 • MP4",
       "type": 3,
