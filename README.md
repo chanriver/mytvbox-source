@@ -4,7 +4,7 @@
 
 
 基于 `qist/tvbox` 的 `jsm.json` 整理而来的自用 TVBox 配置（本地副本已重命名为
-`zlw-redmitv.json`），已补齐全部依赖文件，
+`dianshi_custom.json`），已补齐全部依赖文件，
 可直接部署到 Cloudflare Pages，红米电视上用 TVBoxOSD 订阅即可。
 
 原始配置本身**不能独立使用**——它引用了 38 个相对路径依赖文件
@@ -15,10 +15,10 @@
 
 | 项目 | 数量 |
 |---|---|
-| 站点 | 62（33 个爬虫解析器经 jar 校验 100% 覆盖） |
-| 可搜索 / 可筛选 / 快搜 | 78 / 34 / 43 |
-| 播放解析接口 | 28 |
-| 直播源 | 2 |
+| 站点 | 97（71 个 csp_ 爬虫经 jar 校验 100% 覆盖） |
+| 可搜索 / 可筛选 / 快搜 | 47 / 26 / 31 |
+| 播放解析接口 | 11 |
+| 直播源 | 1 |
 | 广告过滤规则 | 60 |
 | DoH / 分流规则 | 5 / 19 |
 
@@ -29,17 +29,16 @@
 ```
 （以下文件均在仓库根目录；Cloudflare Pages 输出目录填 `/`）
 ├── index.html               状态首页（浏览器打开可自检）
-├── zlw-redmitv.json          主配置
-├── jar/spider.jar           爬虫核心（含 77 个 csp_ 解析器）
+├── dianshi_custom.json  主配置
+├── jar/spider.jar           爬虫核心（含 71 个 csp_ 解析器）
 ├── lib/drpy2.min.js         drpy2 引擎
-├── js/                      22 个 drpy 规则
-├── py/                      6 个 Python 爬虫
+├── js/                      14 个 drpy 规则
+├── py/                      8 个 Python 爬虫
 └── tvboxtv-25.txt           IPv6 直播源（25 频道）
 ```
 
-配置里所有路径都是**相对路径**（`./jar/spider.jar`），
-TVBoxOSD 会以配置文件自身的 URL 为基准解析，
-所以整套目录必须放在同一个域名下，不能拆开部署。
+配置里的 `spider` / `api` / `ext` 全部写成**绝对地址**（指向本站域名），影视仓（FongMi/TV）和 TVBoxOSD 都能直接加载；
+换成别的域名时用生成脚本统一改写，别手工替换。
 
 ## 部署到 Cloudflare Pages
 
@@ -48,7 +47,7 @@ TVBoxOSD 会以配置文件自身的 URL 为基准解析，
 1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages**
 2. **Create application** → **Pages** → **Upload assets**
 3. 项目名随意，例如 `my-tvbox`
-4. 把**仓库里全部文件和文件夹**拖进去（根目录的 `zlw-redmitv.json`、`jar/`、`js/`、`py/`、`lib/`、`tvboxtv-25.txt` 都要带上，少一个就会有站点加载失败）
+4. 把**仓库里全部文件和文件夹**拖进去（根目录的 `dianshi_custom.json`、`jar/`、`js/`、`py/`、`lib/`、`tvboxtv-25.txt` 都要带上，少一个就会有站点加载失败）
 5. 部署完成后得到 `https://my-tvbox.pages.dev`
 
 ### 方式二：Wrangler CLI（可反复更新）
@@ -77,7 +76,7 @@ wrangler pages deploy . --project-name=my-tvbox
 1. 电视安装 **TVBoxOSD**（GitHub: `Takoboy/TVBoxOSD`，取最新 Release 的 APK）
 2. 打开 App → **设置** → **配置地址**，填入：
    ```
-   https://<你的域名>.pages.dev/zlw-redmitv.json
+   https://<你的域名>.pages.dev/dianshi_custom.json
    ```
 3. 保存并返回首页，App 会自动拉取配置和 `spider.jar`
 4. 首次进入某个站点时如果提示加载失败，进入该站设置里点「刷新配置」重试
@@ -93,7 +92,7 @@ wrangler pages deploy . --project-name=my-tvbox
 
 ## 自己改配置
 
-`zlw-redmitv.json` 是纯 JSON，改完直接重新 deploy。常见调整：
+`dianshi_custom.json` 是纯 JSON，改完直接重新 deploy。常见调整：
 
 **删掉不想要的站点** — 从 `sites` 数组里删对象即可，删完顺手确认没有别处引用它的 `ext` 文件。
 
@@ -112,7 +111,7 @@ wrangler pages deploy . --project-name=my-tvbox
 **更新爬虫内核** — 换掉 `jar/spider.jar`，然后把 `spider` 字段里的 md5 同步改掉：
 
 ```json
-"spider": "./jar/spider.jar;md5;<新jar的md5>"
+"spider": "https://你的域名/jar/spider.jar;md5;<新jar的md5>"
 ```
 
 改完本地先验一下，避免电视端静默失败：
@@ -188,7 +187,7 @@ md5 对不上时 TVBox 会拒绝加载或反复重下，表现为所有站点报
 
 1. 移除 `danmaku` 字段（原指向 `http://127.0.0.1:9978` 本机代理，电视端无法工作）
 2. 移除 11 个 B 站站点的本地 cookie 依赖（同上原因，改为免登录公开视频）
-3. 去重：`ads` 118→60，`parses` 29→28
+3. 去重：`ads` 118→60，`parses` 29→11
 4. 补齐 38 个相对路径依赖，整理为独立可部署结构
 5. 新增 `index.html` 状态首页、`README.md`、`NOTICE.md`、`.gitignore`
 
@@ -197,7 +196,7 @@ md5 对不上时 TVBox 会拒绝加载或反复重下，表现为所有站点报
 
 ## 精简记录（2026-10-21）
 
-原始配置 144 站，本仓库现为 **62 站**。逐类实测（域名连通性 / API 响应 / 内容抽样）后精简：
+原始配置 144 站，本仓库现为 **97 站**。逐类实测（域名连通性 / API 响应 / 内容抽样）后精简：
 
 | 类别 | 前 | 后 | 说明 |
 |---|---:|---:|---|

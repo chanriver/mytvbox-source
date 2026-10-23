@@ -10,7 +10,7 @@
     项目名称：qist/tvbox
     仓库地址：https://github.com/qist/tvbox
     取用日期：2026-10-20
-    取用文件：jsm.json（本地副本重命名为 zlw-redmitv.json，内容一致）、
+    取用文件：jsm.json（本地副本已改名为 dianshi_custom.json，并经后续整理，内容不再完全一致）、
               jar/spider.jar、lib/drpy2.min.js、js/*.js (23个)、
               py/*.py (8个)、json/*.json (4个)、tvboxtv.txt
 
@@ -85,6 +85,13 @@
        连带删除：json/ 整个目录（SEJY/XXKT/CZKT/GZKT 四个片单）、
                  js/Anime1动畫.js、py/ITalkBBTV.py、py/OleLive.py
      未作改动：咪咕与 IPv6 两个国内直播源、NT动漫（ntdm.tv 国内站）。
+
+  7. 2026-10-23 起的整理
+     - 站点精简与存活复核：现为 97 站，失效的 type 0/1 采集源已删除，明文 http 接口全部改 https
+     - 配置里的相对路径（./jar/、./lib/、./js/）全部改写为绝对地址，影视仓（FongMi/TV）不再依赖 TVBoxOSC 的字符串替换机制
+     - spider 字段补上 md5（字面 hash），客户端命中本地缓存，不再每次刷新重下 jar
+     - 新增 sites.csv / SITES.md 站点清单，随配置自动生成
+     - 首页 index.html 与自检页 check.html 改为跟随实际配置与实际存在的文件
 
 ================================================================================
 五、致谢

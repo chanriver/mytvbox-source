@@ -40,18 +40,17 @@ code{background:#161b22;padding:2px 6px;border-radius:4px;font-size:12px;color:#
 </table>
 </div>
 <script>
-const CONFIG='./zlw-redmitv.json';
+const CONFIG='./dianshi_custom.json';
 const JAR_MD5='4a35e9a49f5872ea0a4358e5424e657a';
 const FILES=[
- ['./zlw-redmitv.json','主配置'],
+ ['./dianshi_custom.json','主配置'],
  ['./jar/spider.jar','爬虫核心(jar)'],
- ['./jar/spider.txt','爬虫核心(txt)'],
- ['./jar/fan.txt','对照jar(fan.txt)'],
+ ['./lib/drpy2.min.js','drpy2引擎'],
+ ['./tvboxtv-25.txt','直播源'],
  ['./fty-copy.json','对照配置'],
  ['./min-fan.json','二分1(fan.txt)'],
  ['./min.json','二分2(spider.jar)'],
- ['./lib/drpy2.min.js','drpy2引擎'],
- ['./tvboxtv-25.txt','25频道直播源']
+ ['./js/360影视.js','drpy规则(14个)']
 ];
 const b=a=>Array.from(new Uint8Array(a)).map(x=>x.toString(16).padStart(2,'0')).join('');
 function md5hex(buf){return crypto.subtle.digest('MD5',buf).then(b).catch(()=>'n/a')}

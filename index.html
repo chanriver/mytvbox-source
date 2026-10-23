@@ -30,37 +30,32 @@
 <body>
 <div class="wrap">
   <h1>My TVBox Source</h1>
-  <div class="sub">自建 TVBox 源 &middot; 生成于 2026-10-20 17:04 &middot; 基于 qist/tvbox 二次整理</div>
+  <div class="sub">自建 TVBox 源 &middot; 生成于 2026-10-23 09:55 &middot; 基于 qist/tvbox 二次整理</div>
 
   <div class="grid">
-    <div class="card"><div class="n">62</div><div class="l">站点</div></div>
-    <div class="card"><div class="n">78</div><div class="l">可搜索</div></div>
-    <div class="card"><div class="n">34</div><div class="l">可筛选</div></div>
-    <div class="card"><div class="n">28</div><div class="l">播放解析</div></div>
-    <div class="card"><div class="n">3</div><div class="l">直播源</div></div>
+    <div class="card"><div class="n">97</div><div class="l">站点</div></div>
+    <div class="card"><div class="n">47</div><div class="l">可搜索</div></div>
+    <div class="card"><div class="n">26</div><div class="l">可筛选</div></div>
+    <div class="card"><div class="n">11</div><div class="l">播放解析</div></div>
+    <div class="card"><div class="n">1</div><div class="l">直播源</div></div>
     <div class="card"><div class="n">60</div><div class="l">广告规则</div></div>
   </div>
 
   <h2>在 TVBoxOSD 中添加</h2>
-  <div class="box"><pre>本页面同目录下的 zlw-redmitv.json 即配置文件。
-在 TVBoxOSD 设置 -&gt; 配置地址，填入本页 zlw-redmitv.json 的完整 URL 即可。</pre></div>
-  <p class="note">配置里的 ./jar/spider.jar 等相对路径会自动解析到本站同目录，无需手工改动。</p>
+  <div class="box"><pre>本页面同目录下的 dianshi_custom.json 即配置文件。
+在 TVBoxOSD 设置 -&gt; 配置地址，填入本页 dianshi_custom.json 的完整 URL 即可。</pre></div>
+  <p class="note">配置里的 jar / js 全部写成绝对地址（指向本站域名），影视仓和 TVBoxOSD 都能正常加载；jar 带 md5，客户端命中本地缓存不重复下载。</p>
 
   <h2>文件索引</h2>
   <ul>
-    <li><a href="/check.html">/check.html</a> &mdash; <b>依赖自检页</b>（先开这个排除部署问题）</li>
-    <li><a href="/zlw-redmitv.json">/zlw-redmitv.json</a> &mdash; 主配置</li>
-    <li><a href="/fty-copy.json">/fty-copy.json</a> &mdash; 对照配置（fty.json 原样副本）</li>
-    <li><a href="/min-fan.json">/min-fan.json</a> &mdash; 二分测试1：已验证可用的 fan.txt jar + 1 个站点</li>
-    <li><a href="/min.json">/min.json</a> &mdash; 二分测试2：我们的 spider.jar + 1 个站点</li>
-    <li><a href="/t-sites.json">/t-sites.json</a> &mdash; 二分测试3：仅 62 站点</li>
-    <li><a href="/t-extras.json">/t-extras.json</a> &mdash; 二分测试4：1 站点 + 全部辅助字段</li>
-    <li><a href="/jar/spider.jar">/jar/spider.jar</a> &mdash; 爬虫核心（1,937,684 字节）</li>
+    <li><a href="/check.html">/check.html</a> &mdash; 依赖自检页（先开这个排除部署问题）</li>
+    <li><a href="/dianshi_custom.json">/dianshi_custom.json</a> &mdash; 主配置（TVBoxOSD 配置地址填这个）</li>
+    <li><a href="/jar/spider.jar">/jar/spider.jar</a> &mdash; 爬虫核心（jar，配置里带 md5，客户端命中缓存）</li>
     <li><a href="/lib/drpy2.min.js">/lib/drpy2.min.js</a> &mdash; drpy2 引擎</li>
+    <li><a href="/js/">/js/</a> &mdash; drpy 规则 14 个</li>
+    <li><a href="/py/">/py/</a> &mdash; Python 爬虫 8 个</li>
     <li><a href="/tvboxtv-25.txt">/tvboxtv-25.txt</a> &mdash; IPv6 直播源</li>
-    <li>/js/ &mdash; drpy 规则 23 个</li>
-    <li>/py/ &mdash; Python 爬虫 8 个</li>
-    <li>/json/ &mdash; 课堂 / 少儿 片单 4 个</li>
+    <li><a href="/radio.txt">/radio.txt</a> &mdash; 广播源</li>
   </ul>
 </div>
 </body>

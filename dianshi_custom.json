@@ -1,26 +1,12 @@
 {
-  "spider": "./jar/spider.jar",
-  "lives": [
-    {
-      "name": "live",
-      "boot": false,
-      "type": 0,
-      "url": "./tvlive.txt",
-      "playerType": 2,
-      "ua": "okhttp/3.8.1",
-      "timeout": 20,
-      "epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}",
-      "logo": "https://logo.wyfc.qzz.io/{name}.png"
-    }
-  ],
-  "wallpaper": "https://wallpaper-1tg.pages.dev/",
+  "spider": "https://tvbox1.361026.xyz/jar/spider.jar;md5;4a35e9a49f5872ea0a4358e5424e657a",
   "sites": [
     {
       "key": "drpy_js_豆瓣",
       "name": "搜索 • 豆瓣",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/drpy.js",
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/drpy.js",
       "searchable": 1,
       "quickSearch": 0,
       "changeable": 0
@@ -52,40 +38,11 @@
       "searchable": 0
     },
     {
-      "key": "ds05",
-      "name": "🍀都司资源",
-      "type": 0,
-      "api": "http://y.ds05.cn/zyapi.php",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "categories": [
-        "电影",
-        "电视剧",
-        "综艺",
-        "动漫",
-        "动作片",
-        "爱情片",
-        "科幻片",
-        "恐怖片",
-        "战争片",
-        "喜剧片",
-        "纪录片",
-        "剧情片",
-        "大陆剧",
-        "港台剧",
-        "欧美剧",
-        "日韩剧",
-        "短剧",
-        "动画片"
-      ]
-    },
-    {
       "key": "新闪雷",
       "name": "新闪雷 • MP4",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/新闪雷.js",
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/新闪雷.js",
       "header": {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0"
       }
@@ -94,8 +51,8 @@
       "key": "闪雷",
       "name": "闪雷 • MP4",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/678.js",
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/678.js",
       "header": {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0"
       }
@@ -121,8 +78,8 @@
       "key": "cupfox_in",
       "name": "茶杯狐 • cupfox.in",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/茶杯狐.js",
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/茶杯狐.js",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0,
@@ -997,7 +954,7 @@
       "key": "电影天堂",
       "name": "影视 • 电影天堂",
       "type": 1,
-      "api": "http://caiji.dyttzyapi.com/api.php/provide/vod",
+      "api": "https://caiji.dyttzyapi.com/api.php/provide/vod",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1082,39 +1039,6 @@
       "changeable": 1
     },
     {
-      "key": "U酷资源風",
-      "name": "影视 • 尤酷[直连]",
-      "type": 1,
-      "api": "https://api.ukuapi.com/api.php/provide/vod/?ac=list",
-      "searchable": 1,
-      "categories": [
-        "综艺",
-        "动漫",
-        "动作片",
-        "喜剧片",
-        "爱情片",
-        "科幻片",
-        "恐怖片",
-        "剧情片",
-        "战争片",
-        "国产剧",
-        "港澳剧",
-        "日剧",
-        "欧美剧",
-        "动漫电影",
-        "台湾剧",
-        "韩剧",
-        "泰剧",
-        "记录片",
-        "短剧",
-        "奇幻片",
-        "犯罪片"
-      ],
-      "header": {
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
-      }
-    },
-    {
       "key": "极速资源",
       "name": "影视 • 极速[直连]",
       "type": 1,
@@ -1156,36 +1080,6 @@
       "header": {
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
       }
-    },
-    {
-      "key": "金蝉采集",
-      "name": "影视 • 金蝉",
-      "type": 1,
-      "api": "https://zy.jinchancaiji.com/api.php/provide/vod",
-      "style": {
-        "type": "rect",
-        "ratio": 1.33
-      },
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "changeable": 1,
-      "playerType": 2
-    },
-    {
-      "key": "小绵阳采集",
-      "name": "影视 • 小绵阳",
-      "type": 1,
-      "api": "https://vs.okcdn100.top/api.php/provide/vod",
-      "style": {
-        "type": "rect",
-        "ratio": 1.33
-      },
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "changeable": 1,
-      "playerType": 2
     },
     {
       "key": "率率",
@@ -1275,87 +1169,101 @@
       "key": "drpy_js_360影视",
       "name": "官源 • 360",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/360影视.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/360影视.js"
     },
     {
       "key": "drpy_js_百忙无果",
       "name": "官源 • 芒果",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/百忙无果.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/百忙无果.js"
     },
     {
       "key": "drpy_js_腾云驾雾",
       "name": "官源 • 腾讯",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/腾云驾雾.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/腾云驾雾.js"
     },
     {
       "key": "drpy_js_奇珍异兽",
       "name": "官源 • 爱奇艺",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/奇珍异兽.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/奇珍异兽.js"
     },
     {
       "key": "drpy_js_菜狗",
       "name": "官源 • 搜狗",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/菜狗.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/菜狗.js"
     },
     {
       "key": "drpy_js_优酷",
       "name": "官源 • 优酷",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/优酷.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/优酷.js"
     },
     {
       "key": "drpy_js_Anime1动畫",
       "name": "动漫 • Anime1动畫",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/Anime1动畫.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/Anime1动畫.js"
     },
     {
       "key": "drpy_js_NT动漫",
       "name": "动漫 • NT动漫",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/NT动漫.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/NT动漫.js"
     },
     {
       "key": "drpy_js_路漫漫",
       "name": "动漫 • 路漫漫",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/路漫漫.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/路漫漫.js"
     },
     {
       "key": "drpy_js_去看吧",
       "name": "动漫 • 去看吧",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/去看吧.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/去看吧.js"
     },
     {
       "key": "bb",
       "name": "配置接口完全免费",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/drpy.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/drpy.js"
     },
     {
       "key": "cc",
       "name": "请勿相信视频中任何广告",
       "type": 3,
-      "api": "./lib/drpy2.min.js",
-      "ext": "./js/drpy.js"
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/drpy.js"
     }
   ],
+  "lives": [
+    {
+      "name": "live",
+      "boot": false,
+      "type": 0,
+      "url": "./tvlive.txt",
+      "playerType": 2,
+      "ua": "okhttp/3.8.1",
+      "timeout": 20,
+      "epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}",
+      "logo": "https://logo.wyfc.qzz.io/{name}.png"
+    }
+  ],
+  "wallpaper": "https://wallpaper-1tg.pages.dev/",
   "parses": [
     {
       "name": "Json聚合",
