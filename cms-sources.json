@@ -1,5 +1,5 @@
 {
-  "spider": "https://gitee.com/q215613905/TVBoxOS/raw/main/JAR/XC.jar;md5;e53eb37c4dc9c3ce1c8ee0c9943a024",
+  "spider": "./jar/p.jar",
   "wallpaper": "https://picsum.photos/1920/1080/?blur=2",
   "sites": [
     {
