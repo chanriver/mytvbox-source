@@ -1219,17 +1219,6 @@
       "playerType": 2
     },
     {
-      "key": "迅游采集_90",
-      "name": "影视 • 迅游采集",
-      "type": 1,
-      "api": "https://api.xyzyapi.com/api.php/provide/vod",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "changeable": 1,
-      "playerType": 2
-    },
-    {
       "key": "drpy_js_360影视_91",
       "name": "官源 • 360",
       "type": 3,
