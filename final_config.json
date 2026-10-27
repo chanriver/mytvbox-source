@@ -6,7 +6,7 @@
       "name": "🏠 我的NAS",
       "type": 3,
       "api": "csp_Alist",
-      "ext": "{\"server\": \"https://alist.361026.xyz\", \"token\": \"alist-097bcfdb-c742-4705-b88d-6b6e8670e705WpOOHqsQRzS3QoO59Wj6caaR7WksMck1S45L29o0jYq1MfKJzKKZxPWZwQrmgVo5\"}",
+      "ext": "{\"server\": \"https://alist.361026.xyz\", \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}}",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1826,5 +1826,6 @@
     "wan.51img1.com",
     "https://lf1-cdn-tos.bytegoofy.com/obj/tos-cn-i-dy/455ccf9e8ae744378118e4bd289288dd"
   ],
-  "pansouUrl": "https://panhub.361026.xyz"
+  "pansouUrl": "https://panhub.361026.xyz",
+  "homePage": "猜你喜欢,最近热门电影,最近热门电视剧,热门动漫,热播综艺,电影筛选,电视剧筛选,电影榜单,电视剧榜单"
 }
