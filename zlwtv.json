@@ -1,5 +1,5 @@
 {
-  "spider": "https://tvbox1.361026.xyz/jar/my_spider.jar",
+  "spider": "https://tvbox1.361026.xyz/jar/zlw.jar",
   "sites": [
     {
       "key": "csp_Douban",
@@ -15,7 +15,7 @@
       "name": "🏠 我的NAS",
       "type": 3,
       "api": "csp_Alist",
-      "ext": "{\"server\": \"http://27.152.166.55:5244\", \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}, \"version\": 3}",
+      "ext": "{\"server\": \"http://192.168.3.194:5244\", \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}, \"version\": 3}",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
