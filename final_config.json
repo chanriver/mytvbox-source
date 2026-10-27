@@ -15,7 +15,7 @@
       "name": "🏠 我的NAS",
       "type": 3,
       "api": "csp_Alist",
-      "ext": "{\"server\": \"https://alist.361026.xyz\", \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}, \"version\": 3}",
+      "ext": "{\"server\": \"http://27.152.166.55:5244\", \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}, \"version\": 3}",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
