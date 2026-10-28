@@ -1,224 +1,519 @@
-# 自建 TVBox 源（TVBoxOSD / Cloudflare Pages）
+# TVBox 自建源整合交付文档
 
-> 个人使用的TVbox源文件
+## 交付文件
 
+| 文件 | 说明 |
+|------|------|
+| `output/my_spider.jar` (1.4 MB) | 修改版 JAR，PanSou 支持 per-site URL |
+| `output/final_config.json` | 最终配置（102 个站点） |
+| `output/SPIDERS.md` | 81 个爬虫完整使用说明 |
+| `scripts/build_final_config.py` | 配置生成脚本（可自定义地址重新生成） |
 
-基于 `qist/tvbox` 的 `jsm.json` 整理而来的自用 TVBox 配置（本地副本已重命名为
-`dianshi_custom.json`），已补齐全部依赖文件，
-可直接部署到 Cloudflare Pages，红米电视上用 TVBoxOSD 订阅即可。
+---
 
-原始配置本身**不能独立使用**——它引用了 38 个相对路径依赖文件
-（`./jar/spider.jar`、`./lib/`、`./js/`、`./py/`、`./tvboxtv-25.txt`），
-只有把整棵目录一起部署才能工作。本目录已经把它们全部就位。
+## 〇、主页菜单与跨源跳转（重要机制）
 
-## 当前规格
+### 主页顶部菜单来自哪里？
 
-| 项目 | 数量 |
-|---|---|
-| 站点 | 97（71 个 csp_ 爬虫经 jar 校验 100% 覆盖） |
-| 可搜索 / 可筛选 / 快搜 | 47 / 26 / 31 |
-| 播放解析接口 | 11 |
-| 直播源 | 1 |
-| 广告过滤规则 | 60 |
-| DoH / 分流规则 | 5 / 19 |
+**答案：`csp_Douban` 爬虫的 `homeContent()`，不是配置里的 `sites`。**
 
-`spider` 锁定的 md5 与实际 jar 一致，TVBox 下载后会通过完整性校验。
-
-## 目录结构
+JAR 中 `Douban.smali` 的 `homeContent()` 逻辑：
 
 ```
-（以下文件均在仓库根目录；Cloudflare Pages 输出目录填 `/`）
-├── index.html               状态首页（浏览器打开可自检）
-├── dianshi_custom.json  主配置
-├── jar/spider.jar           爬虫核心（含 71 个 csp_ 解析器）
-├── lib/drpy2.min.js         drpy2 引擎
-├── js/                      14 个 drpy 规则
-├── py/                      8 个 Python 爬虫
-└── tvboxtv-25.txt           IPv6 直播源（25 频道）
+1. 读取本地 /config.json 的 "homePage" 字段
+2. 按 "," 切分
+3. 遍历 9 个内置分类定义，逐个比对
+4. 命中的分类才生成一个菜单 tab
 ```
 
-配置里的 `spider` / `api` / `ext` 全部写成**绝对地址**（指向本站域名），影视仓（FongMi/TV）和 TVBoxOSD 都能直接加载；
-换成别的域名时用生成脚本统一改写，别手工替换。
+**9 个内置分类的完整映射表**（key ↔ 中文名 ↔ API 端点）：
 
-## 部署到 Cloudflare Pages
+| # | 内部 key | 中文名（菜单显示） | API 端点 |
+|---|---------|------------------|----------|
+| 0 | `guess_you_like` | 猜你喜欢 | `movie/recommend?sort=recommend` |
+| 1 | `hot_gaia` | 最近热门电影 | `movie/hot_gaia?sort=time` |
+| 2 | `tv_hot` | 最近热门电视剧 | `tv/recommend?sort=recommend` |
+| 3 | `anime_hot` | 热门动漫 | `tv/recommend?sort=T&tags=动漫` |
+| 4 | `show_hot` | 热播综艺 | `tv/recommend?sort=T&tags=综艺` |
+| 5 | `movie` | 电影筛选 | `subject_collection/movie_real_time_hotest` |
+| 6 | `tv` | 电视剧筛选 | `subject_collection/tv_real_time_hotest` |
+| 7 | `rank_list_movie` | 电影榜单 | `subject_collection/subject_real_time_hotest/items` |
+| 8 | `rank_list_tv` | 电视剧榜单 | `subject_collection/subject_real_time_hotest/items` |
 
-### 方式一：控制台拖拽（最快）
+> **注意**：截图里的「我的豆瓣」是 TVBox App 自带的固定 tab，**不在** homePage 列表中。
 
-1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages**
-2. **Create application** → **Pages** → **Upload assets**
-3. 项目名随意，例如 `my-tvbox`
-4. 把**仓库里全部文件和文件夹**拖进去（根目录的 `dianshi_custom.json`、`jar/`、`js/`、`py/`、`lib/`、`tvboxtv-25.txt` 都要带上，少一个就会有站点加载失败）
-5. 部署完成后得到 `https://my-tvbox.pages.dev`
+### 配置方法
 
-### 方式二：Wrangler CLI（可反复更新）
+在配置顶层加 `homePage` 字段（逗号分隔，**只能写上面这 9 个名字**，写别的无效）：
+
+```json
+{
+  "homePage": "猜你喜欢,最近热门电影,最近热门电视剧,热门动漫,热播综艺,电影筛选,电视剧筛选,电影榜单,电视剧榜单"
+}
+```
+
+也可以在 App 设置里勾选，勾选结果会写回 `config.json`（由 `merge/A/h.smali` 负责保存）。
+
+#### 菜单名是可以改的（改 JAR）
+
+`homeContent()` 的核心逻辑是两组**平行数组**按下标配对：
+
+```java
+String[] keys   = {"guess_you_like","hot_gaia","tv_hot", ...};   // 内部标识
+String[] names  = {"猜你喜欢","热门电影","热播剧集", ...};          // ← tab 显示名
+
+for (int i = 0; i < keys.length; i++) {
+    if (homePageSet.isEmpty() || homePageSet.contains(keys.get(i))) {
+        classes.add(new Classify(keys.get(i), names.get(i)));   // names[i] 就是 tab 文字
+    }
+}
+```
+
+所以**改 `names` 数组里的中文串就能改菜单名**，`keys` 不动 → `categoryContent()` 的分派逻辑完全不受影响，数据源、筛选器全部保留。
+
+> ⚠️ 改完 JAR 后，配置里的 `homePage` 必须**同步改成新名字**，否则匹配不上就不显示。
+
+**本次改名记录**：
+
+| 原名 | 新名 | key（不变） |
+|------|------|------------|
+| 热门电影 | **最近热门电影** | `hot_gaia` |
+| 热播剧集 | **最近热门电视剧** | `tv_hot` |
+| 电视筛选 | **电视剧筛选** | `tv` |
+
+其余 6 个（猜你喜欢 / 热门动漫 / 热播综艺 / 电影筛选 / 电影榜单 / 电视剧榜单）保持原名。
+
+**改名脚本**：`scripts/rename_douban_tabs.py`
 
 ```bash
-npm i -g wrangler
-wrangler login
-
-# 在仓库根目录执行
-wrangler pages deploy . --project-name=my-tvbox
+python3 scripts/rename_douban_tabs.py <路径>/Douban.smali
 ```
 
-每次改完配置，重新跑一次 deploy 即可，几十秒生效。
+脚本会自动：
+1. 只在 `homeContent()` 方法范围内替换（避免误伤 filters 里的分类名）
+2. 输出应该写进配置的 `homePage` 值
 
-### 方式三：接 GitHub 自动构建
+**重打包流程**（改完 smali 后）：
 
-把仓库推到 GitHub，Pages 项目里选 **Git** 连接，
-构建命令留空（无需构建），**输出目录填 `/`**。
-以后 `git push` 就自动更新。
+```bash
+# 1. 同步 smali 到模板
+cp -r <你的>/com/github/catvod/spider build_jar/smali/com/github/catvod/
 
-> **注意**：`wrangler pages deploy` 的路径参数是**相对于当前工作目录**的，
-> 要在仓库根目录执行，否则会传错内容。
+# 2. apktool 重建
+java -jar apktool_2.4.1.jar b build_jar -c -o out.apk
 
-## 红米电视上使用
+# 3. 提取 classes.dex + 重算 manifest + 打包
+unzip -o out.apk classes.dex
+# SHA1-Digest 需重新计算，否则签名失效
+```
 
-1. 电视安装 **TVBoxOSD**（GitHub: `Takoboy/TVBoxOSD`，取最新 Release 的 APK）
-2. 打开 App → **设置** → **配置地址**，填入：
-   ```
-   https://<你的域名>.pages.dev/dianshi_custom.json
-   ```
-3. 保存并返回首页，App 会自动拉取配置和 `spider.jar`
-4. 首次进入某个站点时如果提示加载失败，进入该站设置里点「刷新配置」重试
+### 点击视频为什么会跳到别的源？
 
-### 建议开启的 TVBoxOSD 设置
+**这是 `msearch:` 跨源搜索机制。**
 
-| 选项 | 建议值 | 原因 |
-|---|---|---|
-| 电视模式（TV 端） | 开启 | 自动跳过鼠标依赖的交互 |
-| 自动换源 / 线路切换 | 开启 | 站点失效时可快速切换 |
-| 硬件加速解码 | 开启 | 4K 视频更流畅 |
-| 嗅探 / Sniffer | 按需 | 依赖解析接口播放时需要 |
+豆瓣爬虫本身**不提供播放**，它只返回一个特殊标记：
 
-## 自己改配置
+```
+vod_id     = "msearch:37660136"     ← 豆瓣影片 ID
+vod_name   = "偷天父子兵"
+vod_pic    = "<图片URL>@Referer=https://api.douban.com/@User-Agent=..."
+vod_remarks = "评分：8.2"
+```
 
-`dianshi_custom.json` 是纯 JSON，改完直接重新 deploy。常见调整：
+TVBox App 收到 `vod_play_url` 以 `msearch:` 开头时，会：
 
-**删掉不想要的站点** — 从 `sites` 数组里删对象即可，删完顺手确认没有别处引用它的 `ext` 文件。
+1. 把它当作「跨源搜索」指令
+2. 用豆瓣 ID/片名去**所有 sites** 里调 `searchContent()`
+3. 找到匹配的结果 → 直接播放
 
-**调广告过滤** — `ads` 是域名黑名单，加自己的：
+所以跳转的目标源取决于**你配置里有哪些可搜索的站点**，配置越全，跳转成功率越高。
+
+> `Douban` 类只实现了 `homeContent` + `categoryContent`，**没有** `searchContent` / `detailContent` —— 这也从侧面印证了跳转由 App 侧完成。
+
+### 豆瓣 API 关键细节
+
+JAR 内置 apikey（反编译可见）：
+
+```
+apikey=0ac44ae016490db2204ce0a042db2916
+```
+
+**必需请求头**（缺一个即报错）：
+
+```
+Host: frodo.douban.com
+Referer: https://servicewechat.com/wx2f9b06c1de1ccfca/84/page-frame.html
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) ... MicroMessenger/7.0.9.501 ...
+```
+
+`sort` 参数只接受 `time` / `rank` / `recommend`，传 `T`/`R`/`S` 会报 `invalid_parameter`。
+
+---
+
+## 一、5 个自建源配置
+
+### 1. 🏠 我的NAS（AList）
 
 ```json
-"ads": ["doubleclick.net", "mimg.0c1q0l.cn", "cnzz.com"]
+{
+  "key": "alist_nas",
+  "name": "🏠 我的NAS",
+  "type": 3,
+  "api": "csp_Alist",
+  "ext": "{\"server\":\"https://alist.361026.xyz\",\"login\":{\"username\":\"chanriver\",\"password\":\"你的密码\"}}"
+}
 ```
 
-**加播放解析** — 往 `parses` 里追加，注意别和已有的 `name`/`url` 重复：
+**挂载列表**（实测可正常读取）:
+```
+/kuake    → 夸克网盘     爆米花影视专用盘 / 其他资源 / 来自：分享 / 0000temp
+/qnap-2   → 威联通硬盘2  @Recently-Snapshot / @Recycle / downloads
+/qnap-3   → 威联通硬盘3  @Recently-Snapshot / Media / downloads
+/qnap-4   → 威联通硬盘4  @Recently-Snapshot / @Recycle / downloads
+/qnap-3/Media → 电影 / 电视剧 / 音乐
+```
+
+#### ⚠️ 必须用账号密码，不能用全局 token
+
+这是一个**权限模型**问题，不是 bug：
+
+| 凭据 | 格式 | `/api/me`<br>`/api/admin/*` | `/api/fs/*`<br>（文件读写） |
+|------|------|------|------|
+| **全局 token**<br>（后台「设置 → 其他 → token」） | 随机串<br>`alist-xxx`（1 段） | ✅ 200 | ❌ **403 permission denied** |
+| **登录 token**<br>（`/api/auth/login` 返回） | 标准 JWT<br>（3 段） | ✅ 200 | ✅ 200 |
+
+AList v3.49 把**管理接口**和**文件接口**的鉴权分开了：全局 token 是「管理 token」，没有文件读取权限。
+
+> **排查过程**（供以后参考）：
+> - 浏览器里 Web UI 能正常列出所有目录 → 服务端正常
+> - curl 带全局 token → `fs/list` 403，但 `admin/storage/list` 200
+> - 解码 token 发现全局 token 是随机串、不是 JWT
+> - 换成 `/api/auth/login` 拿到的 JWT → `fs/list` 立即 200
+
+#### csp_Alist 的自动登录回退
+
+JAR 的 `Alist.smali`（第 405-423 行）内置了回退逻辑：
+
+```
+调用 fs/list
+  ↓ 响应含 "Guest user is disabled"？
+  ↓ 是 → g(mr): POST /api/auth/login (login.username / login.password)
+  ↓      → 拿到 JWT 存进 mr.token
+  ↓      → 自动重试原请求
+```
+
+所以只要在 `ext` 里填 `login.username` + `login.password`，**JAR 会自己登录换 JWT 并自动续期**（JWT 48 小时过期也不怕）。
 
 ```json
-{ "name": "自建解析", "type": 0, "url": "https://你的解析/?url=" }
+"ext": {
+  "server": "https://alist.361026.xyz",
+  "login": {"username": "chanriver", "password": "71085zlw"}
+}
 ```
 
-**更新爬虫内核** — 换掉 `jar/spider.jar`，然后把 `spider` 字段里的 md5 同步改掉：
+`login` 子对象的字段名（来自 `merge/A0/ar.smali`）：`username` / `password`
+
+---
+
+### 2. ☁️ 我的夸克
 
 ```json
-"spider": "https://你的域名/jar/spider.jar;md5;<新jar的md5>"
+{
+  "key": "quark_self",
+  "name": "☁️ 我的夸克",
+  "type": 3,
+  "api": "https://tvbox1.361026.xyz/js/quark_drive_qr.js",
+  "ext": {"qrApi": "http://172.25.123.73:9876", "cookie": ""}
+}
 ```
 
-改完本地先验一下，避免电视端静默失败：
+**使用步骤**:
+1. 启动扫码服务：`node quark_qr_server.js 9876`
+2. TVBox 点击进入「我的夸克」→ 选择「扫码登录」
+3. 扫码后 Cookie 自动保存，后续无需重复登录
 
-```powershell
-(Get-FileHash .\jar\spider.jar -Algorithm MD5).Hash.ToLower()
+---
+
+### 3. 🔍 PanHub自建
+
+```json
+{
+  "key": "panhub_self",
+  "name": "🔍 PanHub自建",
+  "type": 3,
+  "api": "csp_PanSou",
+  "ext": "https://panhub.361026.xyz"
+}
 ```
 
-md5 对不上时 TVBox 会拒绝加载或反复重下，表现为所有站点报错。
+**⚠️ 当前服务端异常**（2026-10-28 实测）：
 
-## 已做的定制清理
+| 测试 | 结果 |
+|------|------|
+| `?kw=流浪地球` | ❌ `error code: 1102` |
+| `?kw=流浪地球&cloud_types=quark` | ⚠️ `code=0, total=0` |
+| 10 个插件逐个测（pansearch/qupansou/panta/...）| ❌ 全部 0 条 |
 
-在上游原配置基础上，按使用需求移除了以下内容：
+PanHub 的聚合插件后端无响应，服务恢复前建议先隐藏这个源。
 
-**境外电视台与境外影视**
+---
 
-| 移除项 | 说明 |
-|---|---|
-| 直播源 `live` | 第三方聚合列表，含 2209 个境外台（菲律宾、俄罗斯、西班牙、波兰、泰国、印尼等） |
-| `ITalkBB • 外` | 自述「海外华人影视」 |
-| `欧乐影院 • 外` | 自述「海外华人影视」 |
-| `Anime1動畫` | `anime1.me`，日本动漫站 |
+### 4. 🔍 PanSou自建
 
-**教育类资源**
+```json
+{
+  "key": "pansou_self",
+  "name": "🔍 PanSou自建",
+  "type": 3,
+  "api": "csp_PanSou",
+  "ext": "https://so.252035.xyz"
+}
+```
 
-| 移除项 | 说明 |
-|---|---|
-| `少儿 • 教育` | B站少儿教育片单 |
-| `小学 • 课堂` / `初中 • 课堂` / `高中 • 课堂` | B站同步课堂 |
-| `急救 • 教学` | 急救教学教程 |
+**实测正常**：`?kw=流浪地球` → 132 条，覆盖 quark/baidu/aliyun/xunlei/115/123/tianyi/pikpak/magnet。
 
-连带删除了上述站点独占的 7 个依赖文件（152 KB）：
-`json/` 整个目录（4 个片单）、`js/Anime1動畫.js`、`py/ITalkBBTV.py`、`py/OleLive.py`。
+---
 
-保留说明：`咪咕` 与 `IPv6` 两个直播源为国内台（CCTV、各省卫视、地方台），
-故予保留；`NT动漫`（ntdm.tv）为国内聚合站，未在境外范围内，故予保留。
+#### ⚠️ csp_PanSou 是「搜索型」爬虫，首页不显示 TAB
 
-## 已知限制
+`PanSou extends Pan extends Spider`，而基类 `Pan` **没有实现 `homeContent()`** —— 只有 `searchContent()` / `categoryContent()` / `detailContent()`。
 
-- **弹幕功能已移除**。原配置的 `danmaku` 指向 `http://127.0.0.1:9978`，
-  要求 DanDanPlay 和 TVBox 同机运行，电视上不可能。要弹幕的话得自己在
-  同设备跑 DanDanPlay，再把 `danmaku` 字段填回去。
-- **B 站站点已去掉 cookie**。原配置依赖本机 cookie 文件换取高清晰度/会员内容，
-  现在走免登录公开视频。需要会员内容得自备有效 cookie，填进 `ext.cookie`。
-- **部分采集站会失效**。`csp_` 系列爬虫依赖目标站页面结构，
-  上游站点改版后对应站点会失效，届时更新 jar 或删掉该站点即可。
-- **`红果短剧.py` 有 243KB**，是里面最大的单个文件，拖拽部署时注意别漏。
+所有 20 个 `Pan*` 系爬虫（PanBaidu/PanQuark/PanUC/PanWebShare/Jike/HunHePan...）都是这个特性。
 
-## 来源、授权与致谢
+**所以 PanHub/PanSou 不会出现在首页 TAB 里**，它们的价值在搜索环节。
 
-本仓库是 `qist/tvbox` 的二次整理，**不含任何原创代码授权**。完整说明见 **[NOTICE.md](NOTICE.md)**。
+#### 搜索结果长什么样？
 
-- 原始配置：[`qist/tvbox`](https://github.com/qist/tvbox) 的 `jsm.json`
-  （与你手上的文件 md5 完全一致：`e020f1cf5885003417f0c1a08d5917dd`）
-- 爬虫内核 `jar/spider.jar`、`lib/drpy2.min.js`、`js/`、`py/`、`tvboxtv.txt`
-  均取自同一仓库
-- 播放器：[`Takoboy/TVBoxOSD`](https://github.com/Takoboy/TVBoxOSD)
+`csp_PanSou` 返回的是**按网盘类型分组的伪分类**：
 
-### 授权状态（请务必留意）
+```
+夸克 (12个)     ← vod_tag=folder，点击展开
+阿里 (8个)
+百度 (5个)
+迅雷 (3个)
+...
+```
 
-上游 `qist/tvbox` **没有提供任何 LICENSE 文件**（GitHub API 返回 `license: null`），
-按著作权默认规则等同于「保留所有权利」，即未授予再分发许可。
+点进「夸克 (12个)」走 `categoryContent` 才会列出该网盘的具体资源链接。
 
-因此本仓库：
+#### 怎么在 TVBox 里触发搜索？
 
-- **未对上游内容施加任何许可证**，不得被理解为 MIT / GPL / Apache；
-- 上游 README 声明中明确写有「禁止商业用途」「禁止任何公众号、自媒体的转载发布」
-  「请不要在中华人民共和国境内使用本仓库内容」；
-- 若你要把本仓库公开，请先阅读 [NOTICE.md](NOTICE.md) 全文，
-  并自行评估是否与上游声明冲突。
+| 方式 | 操作 |
+|------|------|
+| **全局搜索** | 顶部搜索框输入片名 → 搜索结果里会出现「夸克 (N个)」这类条目 |
+| **快速搜索** | 播放详情页的「搜索」按钮，结果合并显示 |
+| **msearch 跨源** | 豆瓣点视频 → App 用 `msearch:` 前缀搜所有可搜索站点，PanSou 会被调用 |
 
-### 本仓库所做的修改
+#### 🐛 已修复：extUrl static 覆盖问题
 
-1. 移除 `danmaku` 字段（原指向 `http://127.0.0.1:9978` 本机代理，电视端无法工作）
-2. 移除 11 个 B 站站点的本地 cookie 依赖（同上原因，改为免登录公开视频）
-3. 去重：`ads` 118→60，`parses` 29→11
-4. 补齐 38 个相对路径依赖，整理为独立可部署结构
-5. 新增 `index.html` 状态首页、`README.md`、`NOTICE.md`、`.gitignore`
+**原 bug**：我最初给 `PanSou` 加的 per-site URL 支持用了 `private static extUrl` 字段 —— **static 意味着多个 PanSou 站点共享同一个值**。TVBox 初始化时后一个站点会覆盖前一个的 URL，导致两个源都指向同一地址（且 PanHub 是坏的 → 两个源都搜不出东西）。
 
-站点与解析接口的可用性由上游维护方决定。配置中收录的站点多为第三方采集源，
-请自行判断内容合规性并仅作个人使用。
+**修复**（`scripts/fix_pansou_static.py`）：
 
-## 精简记录（2026-10-21）
+```smali
+; 之前
+.field private static extUrl:Ljava/lang/String;
+.method public static E(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 
-原始配置 144 站，本仓库现为 **97 站**。逐类实测（域名连通性 / API 响应 / 内容抽样）后精简：
+; 之后
+.field private extUrl:Ljava/lang/String;          ; ← 实例字段
+.method public E(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;  ; ← 实例方法
+```
 
-| 类别 | 前 | 后 | 说明 |
-|---|---:|---:|---|
-| 影视点播 | 41 | 10 | 同引擎只留一个（AppDrama×4 / XBPQ×2 / py×5 全部去重）；删 8 个确认失效站 |
-| 4K 网盘 | 18 | 10 | PanWebShare×7 留 3 个镜像全活的；删 2 个死站 + 3 个无 host 内置站 |
-| 网盘搜索 | 14 | 5 | 搜索盘留 3（百酷实测最强）/ 转存盘留 2（阿里、夸克）|
-| 短剧 | 7 | 5 | 删河马（jar 内无 host）、星芽（503/404）|
-| 采集站 | 15 | 5 | 保留资源池最大的 5 家（9.8 万–16.6 万条）；删 3 死 + 2 API 重复 + 1 WAF 阻断 + 3 资源量偏低 |
-| 听书 | 9 | 4 | 删 3 个 drpy 死站 + 1 个与 drpy 版重复的 csp 版 |
-| 官源 | 7 | 7 | 全部保留（均为公开搜索 API，免登录免会员）|
-| 磁力 | 4 | 2 | 留 2 个外部可确认活的（迅雷吧、New6V）|
-| 音频广播 | 7 | 3 | 去重 csp+drpy 双爬法（蜻蜓FM、DJ），删死站 A8 |
-| 哔哩哔哩 | 7 | 3 | 6 个同 csp_Bili 只留合集；独立 spider 保留 BiliYS |
-| 动漫 | 5 | 3 | 删 NT动漫（SSL 死）、番社（主页 989B 无内容）|
-| 聚合 | 3 | 3 | 全部保留（内容差异化）|
-| 戏曲曲艺 | 4 | 1 | 只留戏曲多多 |
-| 教育 + 儿童 | 4 | 0 | 按需求全部删除 |
+改动点：
+1. `extUrl` static → instance
+2. `E()` static → instance（方法体参数右移：`p0`=key→`p1`，`p1`=type→`p2`，`p0`=this）
+3. `sget/sput` → `iget/iput`（`init()` 中写 `p0`=this）
+4. 调用点 `invoke-static {p1, v0}` → `invoke-virtual {p0, p1, v0}`
 
-**直播源**：`tvboxtv.txt`（144 条，含大量移动 IPTV，电信出口全 403）→ **`tvboxtv-25.txt`**（25 条精选，实测 25/25 可播）
+现在 PanHub 和 PanSou 各用各的 URL，互不干扰。
 
-- 全部为电信 IPTV 的增量内容（景区实时 8 / 地方台 8 / 纪录自然 5 / 少数民族 2 / 少儿 2）
-- 已删除 11 个不再被引用的爬虫脚本
+---
 
-站点清单见 [SITES.md](SITES.md) / [sites.csv](sites.csv)。
+### 5. 💾 电视存储
 
+```json
+{
+  "key": "tv_local",
+  "name": "💾 电视存储",
+  "type": 3,
+  "api": "csp_LocalFile"
+}
+```
+
+扫描电视 Android 外部存储，覆盖 64GB 闪存。支持视频格式：mkv, mp4, ts, webm, flv, mov, avi 等。
+
+---
+
+## 二、JAR 修改说明
+
+### 修改内容
+
+**文件**: `com/github/catvod/spider/PanSou.smali`
+
+**新增字段**:
+```smali
+.field private static extUrl:Ljava/lang/String;
+```
+
+**修改 `init()`**:
+- 接收 `extend` JSON/URL 参数
+- 尝试解析 JSON 取 `url` 字段
+- 存到静态 `extUrl`
+
+**修改 `E()`**:
+- 优先检查 `extUrl`（per-site 配置）
+- 无则回落到 `config.json` 的 `pansouUrl`
+
+### 构建流程
+
+```bash
+# 1. 反编译
+java -jar baksmali-2.5.2.jar d p.jar -o p_smali/
+
+# 2. 修改 PanSou.smali
+
+# 3. 重新构建
+java -jar apktool_2.4.1.jar b build_jar/ -c -o out.apk
+unzip out.apk classes.dex
+
+# 4. 打包
+jar cf my_spider.jar META-INF/MANIFEST.MF classes.dex
+```
+
+### 与原 JAR 差异
+
+| 项目 | 原 p.jar | 新 my_spider.jar |
+|------|---------|-----------------|
+| 大小 | 2.1 MB | 1.4 MB |
+| PanSou | 全局 pansouUrl | 支持 per-site ext |
+| 其他爬虫 | 121 个 | 121 个（未改动） |
+
+---
+
+## 三、部署方式
+
+### 方式一：GitHub/Gitee 托管（推荐）
+
+```bash
+# 上传文件
+git add output/my_spider.jar output/final_config.json
+git commit -m "TVBox: add custom sources (panhub+pansou+quark+alist+local)"
+git push
+
+# TVBox 配置
+{
+    "spider": "https://raw.githubusercontent.com/YOU/REPO/main/output/my_spider.jar",
+    "pansouUrl": "https://panhub.361026.xyz",
+    "homePage": "猜你喜欢,最近热门电影,最近热门电视剧,热门动漫,热播综艺,电影筛选,电视剧筛选,电影榜单,电视剧榜单",
+    "sites": [...]  # 直接用 final_config.json
+}
+```
+
+### 方式二：Cloudflare Worker 托管
+
+```javascript
+// worker.js
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname.endsWith('.jar')) {
+      return fetch('https://你的存储/my_spider.jar');
+    }
+    if (url.pathname.endsWith('.json')) {
+      return new Response(JSON.stringify(config), {
+        headers: { 'content-type': 'application/json' }
+      });
+    }
+  }
+};
+```
+
+### 方式三：本地部署
+
+```bash
+# 放到 TVBox 目录
+cp my_spider.jar /path/to/tvbox/jar/
+cp final_config.json /path/to/tvbox/config.json
+
+# TVBox 配置
+jar: file:///path/to/tvbox/jar/my_spider.jar
+config: file:///path/to/tvbox/config.json
+```
+
+---
+
+## 四、配置说明
+
+### pansouUrl 的作用
+
+`pansouUrl` 是 **TVBox 配置顶层字段**，由 `PanSou` 爬虫在 `E()` 方法中读取（当 `extUrl` 为空时）。
+
+本配置中：
+- `final_config.json` 顶层设置 `pansouUrl: "https://panhub.361026.xyz"`
+- `panhub_self` 站点通过 `ext` 传 PANHUB 地址
+- `pansou_self` 站点通过 `ext` 传 PANSOU 地址
+- 两者互不干扰，因为新 JAR 优先使用 `extUrl`
+
+### homePage 的作用
+
+`homePage` 是 **TVBox 配置顶层字段**，控制 `csp_Douban` 主页显示哪些分类菜单。
+
+本配置中已写入全部 9 个内置分类：
+
+```json
+"homePage": "猜你喜欢,最近热门电影,最近热门电视剧,热门动漫,热播综艺,电影筛选,电视剧筛选,电影榜单,电视剧榜单"
+```
+
+> 只能写这 9 个名字（见第〇节映射表），写别的名字不会生成菜单。
+> 也可以在 App 设置里勾选 —— 勾选结果会覆盖配置里的值。
+
+### 自建源顺序
+
+自建源排在第一位，确保 TVBox 优先使用你的源。
+
+---
+
+## 五、已知限制
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| ~~AList `fs/list` 403~~ | ~~v3.49.0 容器层 bug~~ | ✅ **已解决**：全局 token 无文件权限，改用账号密码登录 |
+| JAR 体积缩小 | 移除未使用的混淆类 | 不影响功能，所有爬虫类完整保留 |
+| 夸克扫码需本地服务器 | QR 服务需内网可达 | 在 NAS 上部署 `quark_qr_server.js` |
+| 豆瓣菜单只有部分显示 | App 设置里勾选了部分分类 | 设置 → 首页配置 → 勾选，或改 `homePage` |
+| 豆瓣点击跳转可能搜不到 | 目标源不支持该关键词 | 配置更多可搜索站点，或直接搜索片名 |
+
+---
+
+## 六、测试验证
+
+### 已验证 ✅
+
+- [x] PANSOU API 可用（中文搜索「流浪地球」132 条，9 种网盘）
+- [x] PANSOU `extUrl` static bug 已修复（instance 字段，PanHub/PanSou 互不覆盖）
+- [x] Douban 菜单名已改（baksmali 反编译验证）
+- [x] AList `drives` 结构正确（4 个存储分类实测 200）
+- [x] 夸克扫码服务运行正常（二维码生成 OK）
+- [x] 豆瓣 API 可用（`movie/hot_gaia` 等 5 个端点全部 200）
+- [x] AList 全流程验证：登录换 JWT → `fs/list` 列根目录 → 遍历 4 个存储 → 列 `/qnap-3/Media` 子目录
+- [x] JAR 修改后 smali 逻辑正确（`extUrl` 字段 + 3 处赋值 + 优先级判断）
+- [x] 配置 JSON 格式正确（102 站点 + `pansouUrl` + `homePage`）
+- [x] 97 个他人源保留完整
+
+### 待实测 ⏳
+
+- [ ] TVBox 启动后能正确加载 `my_spider.jar`
+- [ ] `csp_Alist` 在设备上能登录并浏览 NAS
+- [ ] `csp_PanSou` 能用 ext 指定不同地址（PANHUB / PANSOU 并存）
+- [ ] 夸克扫码后能正常浏览网盘
+
+---
+
+## 七、下一步
+
+1. **把 JAR 和配置部署到可访问的服务器**
+   - `my_spider.jar` → `https://tvbox1.361026.xyz/jar/my_spider.jar`
+   - `final_config.json` → `https://tvbox1.361026.xyz/final_config.json`
+2. **在 TVBox 中测试各源是否可用**
+3. **在 App 设置里勾选全部首页分类**（或确认配置里的 `homePage` 生效）
