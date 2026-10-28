@@ -328,6 +328,49 @@ PanHub 的聚合插件后端无响应，服务恢复前建议先隐藏这个源�
 
 现在 PanHub 和 PanSou 各用各的 URL，互不干扰。
 
+#### 🐛 已修复：缺少 `res=merged_by_type` 参数
+
+**这是 PANSOU 搜不出东西的真正原因。**
+
+JAR 的 `E()` 原本构造的 URL：
+
+```
+{extUrl}/api/search?kw={关键词}&cloud_types=aliyun,quark,uc,baidu,tianyi,123,xunlei,mobile
+```
+
+实测这个 URL **返回空**：
+
+| 请求 | 结果 |
+|------|------|
+| `?kw=流浪地球` | ✅ 145 条 |
+| `?kw=流浪地球&cloud_types=quark` | ❌ **空响应** |
+| `?kw=流浪地球&cloud_types=quark&res=merged_by_type` | ✅ 33 条（只有 quark）|
+| `?kw=流浪地球&res=merged_by_type` | ❌ 空响应 |
+
+**`cloud_types` 必须配合 `res=merged_by_type` 才能生效** —— 少一个参数，服务端就返回空。
+
+**修复**（在 `E()` 的 cloud_types 之后追加）：
+
+```smali
+    const-string v1, "&res=merged_by_type"
+
+    invoke-virtual {v2, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+```
+
+修复后 PANSOU 实测：**100 条**，覆盖 baidu(14)/tianyi(6)/123(28)/quark(33)/xunlei(8)/aliyun(11)。
+
+---
+
+#### 📌 PANSOU 完整修复记录（3 个 bug）
+
+| # | Bug | 症状 | 修复 |
+|---|-----|------|------|
+| 1 | `extUrl` 是 `static` | 多源互相覆盖 URL | 改实例字段 + `E()` 改实例方法 |
+| 2 | 缺 `res=merged_by_type` | **搜索永远返回空** | URL 追加该参数 |
+| 3 | `version` 缺失（AList） | 用公开接口 | `ext` 加 `"version": 3` |
+
+> 教训：Pansou 系列 API 对参数组合很敏感，改 JAR 前必须先用 curl 验证完整 URL。
+
 ---
 
 ### 5. 💾 电视存储
