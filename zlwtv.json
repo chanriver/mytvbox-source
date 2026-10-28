@@ -15,7 +15,7 @@
       "name": "🏠 我的NAS",
       "type": 3,
       "api": "csp_Alist",
-      "ext": "{\"server\": \"https://alist.361026.xyz\", \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}, \"version\": 3}",
+      "ext": "{\"name\": \"全部\", \"server\": \"https://alist.361026.xyz\", \"version\": 3, \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}, \"drives\": [{\"name\": \"夸克网盘\", \"server\": \"https://alist.361026.xyz/kuake\", \"version\": 3, \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}}, {\"name\": \"威联通硬盘2\", \"server\": \"https://alist.361026.xyz/qnap-2\", \"version\": 3, \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}}, {\"name\": \"威联通硬盘3\", \"server\": \"https://alist.361026.xyz/qnap-3\", \"version\": 3, \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}}, {\"name\": \"威联通硬盘4\", \"server\": \"https://alist.361026.xyz/qnap-4\", \"version\": 3, \"login\": {\"username\": \"chanriver\", \"password\": \"71085zlw\"}}]}",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
