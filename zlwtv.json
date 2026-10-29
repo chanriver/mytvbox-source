@@ -1299,6 +1299,34 @@
       "type": 3,
       "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
       "ext": "https://tvbox1.361026.xyz/js/drpy.js"
+    },
+    {
+      "key": "cnvtv",
+      "name": "央视频",
+      "type": 3,
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/央视频.js",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 1,
+      "changeable": 0,
+      "header": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      }
+    },
+    {
+      "key": "miguvideo",
+      "name": "咪咕视频",
+      "type": 3,
+      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
+      "ext": "https://tvbox1.361026.xyz/js/咪咕视频.js",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 1,
+      "changeable": 0,
+      "header": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
+      }
     }
   ],
   "lives": [
