@@ -1,3 +1,5 @@
 # 本地测试依赖 (npm install cheerio --prefix tools/node)
+# 仓库 lib/drpy-core-lite.min.js 导出的 cheerio 只是 {jinja2, jp},不是 HTML 解析器
+# 电视端有 jar 侧注入的 pdfh/pdfa/pd,不受影响;本地测试需要真 cheerio
+# 安装: cd tools/node && npm install
 tools/node/node_modules/
-tools/node/package-lock.json
