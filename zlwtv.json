@@ -45,6 +45,20 @@
       "changeable": 1
     },
     {
+  "key": "bili",
+  "name": "💡哔哩哔哩",
+  "type": 3,
+  "api": "./js/bili.js",
+  "ext": "{\"quality\":64}",
+  "searchable": 1,
+  "quickSearch": 1,
+  "changeable": 1,
+  "indexs": 0,
+  "style": {
+    "type": "list"
+  }
+},
+    {
       "key": "tv_local",
       "name": "💾 电视存储",
       "type": 3,
