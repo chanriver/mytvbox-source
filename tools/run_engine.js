@@ -100,6 +100,28 @@ function show(label, obj) {
     return d;
 }
 
+// 实测播放: 用 curl 拉前 64KB —— fetch 是异步且不吃代理,MP4/m3u8 动辄上百 MB
+function probePlay(p) {
+    try {
+        const h = JSON.parse(p.header || '{}');
+        const args = ['-sL', '--max-time', '20', '-r', '0-65535', '-o', '/tmp/_probe.bin',
+            '-w', '%{http_code} %{size_download} %{content_type}'];
+        for (const [k, v] of Object.entries(h)) {
+            if (v === undefined || v === null) continue;
+            args.push('-H', `${k}: ${v}`);
+        }
+        const proxy = needsProxy(p.url) ? PROXY : '';
+        if (proxy) args.push('--proxy', proxy);
+        args.push(p.url);
+        const r = execFileSync('curl', args, { encoding: 'utf8', maxBuffer: 1024 * 1024 });
+        let head = '';
+        try { head = fs.readFileSync('/tmp/_probe.bin').slice(0, 16).toString('latin1'); } catch {}
+        console.log(`   ▶ 实测播放: HTTP ${r} | 头部="${head.replace(/[^\x20-\x7e]/g, '.')}"`);
+    } catch (e) {
+        console.log(`   ▶ 实测播放失败: ${e.message.slice(0, 90)}`);
+    }
+}
+
 // home
 const home = show('home', DRPY.home({ filter: {} }));
 const classes = (home?.class || []);
@@ -125,16 +147,30 @@ if (classes.length) {
             if (typeof p === 'string') { try { p = JSON.parse(p); } catch {} }
             console.log(`   播放: parse=${p?.parse} jx=${p?.jx} url=${String(p?.url).slice(0, 110)}`);
             if (p?.url && (p.parse === 0 || p.parse === undefined)) {
-                try {
-                    const r = await fetch(p.url, { headers: { 'User-Agent': 'Mozilla/5.0', ...(JSON.parse(p.header || '{}')) }, redirect: 'follow' });
-                    const t = await r.text();
-                    console.log(`   ▶ 实测播放: HTTP ${r.status}, ${t.length} bytes, m3u8=${t.includes('#EXTM3U')}`);
-                } catch (e) { console.log(`   ▶ 实测播放失败: ${e.message}`); }
+                probePlay(p);
             }
         }
     }
 }
 
 // search
-show('search 庆余年', DRPY.search('庆余年', false, '1'));
+const kw = process.argv[3] || '庆余年';
+const sr = show(`search ${kw}`, DRPY.search(kw, false, '1'));
+if (sr?.list?.length) {
+    const v0 = sr.list[0];
+    console.log(`   -- 搜索项详情: ${v0.vod_name}`);
+    const sdet = show('   detail(搜索项)', DRPY.detail(v0.vod_id));
+    const sv = sdet?.list?.[0];
+    if (sv) {
+        const seps = (sv.vod_play_url || '').split('#').filter(Boolean);
+        console.log(`   详情: ${sv.vod_name} | ${seps.length} 集 | from=${sv.vod_play_from}`);
+        console.log(`   首集: ${seps[0]}`);
+        const splayId = seps[0]?.split('$').pop();
+        const sp = DRPY.play(sv.vod_play_from, splayId, []);
+        let sp2 = sp;
+        if (typeof sp2 === 'string') { try { sp2 = JSON.parse(sp2); } catch {} }
+        console.log(`   播放: parse=${sp2?.parse} jx=${sp2?.jx} url=${String(sp2?.url).slice(0, 110)}`);
+        if (sp2?.url && (sp2.parse === 0 || sp2.parse === undefined)) probePlay(sp2);
+    }
+}
 process.exit(0);
