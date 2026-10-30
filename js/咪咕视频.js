@@ -20,6 +20,13 @@ var rule = {
     // 二级 js: 里的 input 就是这个 URL —— 设为纯 fyid 即可让 input = 完整 vod_id
     // (引擎会 urljoin(host, detailUrl),所以 input 形如 https://webapi.miguvideo.com/<id>)
     detailUrl: 'fyid',
+    // 播放走真实直链(已带 ddCalcu 签名),不需要解析器,也不需要嗅探。
+    // 引擎在 play_json 为空时会强制 jx:0/parse:1 覆盖 lazy 的设置,
+    // 所以用 play_json 数组显式声明 parse:0/jx:0。
+    play_json: [{
+        re: '*',
+        json: {parse: 0, jx: 0}
+    }],
     预处理: `js:
     rule.MIGU = {
         headers: function () {
@@ -56,6 +63,67 @@ var rule = {
         },
         pic: function (p) {
             return (p && p.pics && p.pics.highResolutionV) ? p.pics.highResolutionV : "";
+        },
+        /* 取当天 YYYYMMDD */
+        dateString: function () {
+            var d = new Date();
+            return "" + d.getFullYear() + ("0" + (d.getMonth() + 1)).slice(-2) + ("0" + d.getDate()).slice(-2);
+        },
+        /* 咪咕 ddCalcu 加密 (旧版 720p 算法)
+           来源: akiralereal/iptv extractors/migu/ddCalcuURL.js */
+        ddCalcu: function (puData, programId) {
+            var keys = "cdabyzwxkl";
+            var out = [];
+            for (var i = 0; i < puData.length / 2; i++) {
+                out.push(puData[puData.length - i - 1]);
+                out.push(puData[i]);
+                if (i === 1) { out.push("v"); }
+                else if (i === 2) { out.push(keys[parseInt(rule.MIGU.dateString()[0])]); }
+                else if (i === 3) { out.push(keys[programId[6]]); }
+                else if (i === 4) { out.push("a"); }
+            }
+            return out.join("");
+        },
+        /* pID -> 真实 m3u8 直链 (带 ddCalcu 签名)
+           端点是 play.miguvideo.com/playurl/v1/play/playurl
+           sign = md5( md5(timestamp + pid + appVersion[0:8]) + "2cac4f2c6c3346a5b34e085725ef7e33migu" + salt[0:4] )
+           来源: akiralereal/iptv extractors/migu/androidURL.js */
+        playUrl: function (pid, rateType) {
+            try {
+                var ts = Math.round(new Date().getTime()).toString();
+                var av = "2600034600";
+                var md5_1 = CryptoJS.MD5(ts + pid + av.substring(0, 8)).toString();
+                var salt = "00000125";
+                var suffix = "2cac4f2c6c3346a5b34e085725ef7e33migu" + salt.substring(0, 4);
+                var sign = CryptoJS.MD5(md5_1 + suffix).toString();
+                var url = "https://play.miguvideo.com/playurl/v1/play/playurl?sign=" + sign
+                    + "&rateType=" + rateType + "&contId=" + pid + "&timestamp=" + ts
+                    + "&salt=" + salt + "&flvEnable=true&super4k=true";
+                var resp = request(url, {
+                    headers: {
+                        'AppVersion': av,
+                        'TerminalId': 'android',
+                        'X-UP-CLIENT-CHANNEL-ID': av + '-99000-201600010010028',
+                        'appCode': 'miguvideo_default_android',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+                        'Referer': 'https://www.miguvideo.com'
+                    }
+                });
+                var data = JSON.parse(resp);
+                var body = data.body || {};
+                var raw = (body.urlInfo || {}).url;
+                if (!raw) {
+                    print('咪咕播放地址获取失败:' + (data.message || data.rid || "未知"));
+                    return "";
+                }
+                var contId = (body.content && body.content.contId) || pid;
+                if (raw.indexOf("&puData=") < 0) { return raw; }
+                var puData = raw.split("&puData=")[1];
+                return raw + "&ddCalcu=" + rule.MIGU.ddCalcu(puData, contId) + "&sv=10004&ct=android";
+            } catch (e) {
+                print('咪咕播放地址异常:' + e.message);
+                return "";
+            }
         }
     };
     `,
@@ -121,18 +189,16 @@ var rule = {
         + '  });'
         + '}'
         + 'setResult(list);',
-    // 播放: 咪咕直链需 ddCalcu 签名, 交给壳子解析
+    // 播放: pID -> 带 ddCalcu 签名的真实 m3u8 直链
     lazy: 'js:'
         + 'var pid = input;'
+        + 'var playUrl = rule.MIGU.playUrl(pid, 3);'
         + 'input = {'
-        + '  parse: 1,'
-        + '  jx: 1,'
-        + '  play_parse: true,'
-        + '  parse_type: "壳子超级解析",'
-        + '  parse_source: "咪咕视频",'
-        + '  url: "https://webapi.miguvideo.com/p/detail/" + pid,'
+        + '  parse: 0,'
+        + '  jx: 0,'
+        + '  url: playUrl,'
         + '  header: JSON.stringify({'
-        + '    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0",'
+        + '    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",'
         + '    "Referer": "https://www.miguvideo.com",'
         + '    "Origin": "https://www.miguvideo.com"'
         + '  })'
