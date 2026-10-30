@@ -529,7 +529,17 @@ function createSpider(site = {}) {
     }
 
     async function videoDetail(bvid) {
-        const body = await apiGet(`${API}/x/web-interface/view?bvid=${bvid}`, REFERER_HOME);
+        /* view 接口常被风控返回 HTML(实测同 URL 连测 6 次仅 1 次成功),
+           失败时回退到 /x/player/pagelist(实测 100% 可用) */
+        let body = null;
+        try {
+            body = await apiGet(`${API}/x/web-interface/view?bvid=${bvid}`, REFERER_HOME);
+        } catch (error) {
+            body = null;
+        }
+        if (!isObject(body?.data)) {
+            return await videoDetailFallback(bvid);
+        }
         const data = isObject(body?.data) ? body.data : {};
         const owner = isObject(data.owner) ? data.owner : {};
         const episodes = [];
@@ -555,6 +565,37 @@ function createSpider(site = {}) {
             vod_actor: stripHtml(owner.name),
             vod_director: "",
             vod_content: stripHtml(data.desc),
+            vod_play_from: "B站",
+            vod_play_url: playUrl,
+        };
+    }
+
+    /* view 被风控时的回退实现: 用 pagelist 拿分P */
+    async function videoDetailFallback(bvid) {
+        const body = await apiGet(`${API}/x/player/pagelist?bvid=${bvid}`, REFERER_HOME);
+        const pages = Array.isArray(body?.data) ? body.data : [];
+        const episodes = [];
+        for (const entry of pages) {
+            const cid = stringValue(entry?.cid);
+            if (!cid) continue;
+            const part = stringValue(entry?.part);
+            const label = part || ("P" + (entry?.page || episodes.length + 1));
+            episodes.push({label: "P" + (entry?.page || episodes.length + 1) + " " + label, id: bvid + "|" + cid});
+        }
+        if (!episodes.length) {
+            throw new Error("详情获取失败（view 与 pagelist 均不可用）");
+        }
+        const playUrl = episodes.map((episode) => safeLabel(episode.label) + "$" + episode.id).join("#");
+        return {
+            vod_id: bvid,
+            vod_name: bvid,
+            vod_pic: "",
+            vod_remarks: episodes.length + "P",
+            vod_year: "",
+            vod_area: "",
+            vod_actor: "",
+            vod_director: "",
+            vod_content: "",
             vod_play_from: "B站",
             vod_play_url: playUrl,
         };
