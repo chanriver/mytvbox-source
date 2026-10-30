@@ -7,6 +7,11 @@ var rule = {
     quickSearch: 0,
     filterable: 1,
     multi: 1,
+    /* 优酷官方取流接口(getRealM3U8 / play.get.json / getPlayList)已全部下线,
+       直链只能靠外部解析接口 —— 二级里的 play_url 前缀就是它。
+       这里给个占位: 引擎注入的 play_url 恒为 "",所以默认留空走嗅探(jx:1)。
+       需要直链播放时,把这个值改成 "<解析接口>?url=" 即可,二级会自动拼。 */
+    play_url: '',
     url: '/category/data?optionRefresh=1&pageNo=fypage&params=fyfilter',
     filter_url: '{{fl}}',
     filter: {
@@ -2450,23 +2455,49 @@ var rule = {
             } else {
                 try {
                     json = JSON.parse(json);
-                    let data = json.data.data;
-                    let data_extra = data.data.extra;
-                    let img = data_extra.showImgV;
-                    let model = json.data.model;
-                    let m = model.detail.data.nodes[0].nodes[0].nodes[0].data;
-                    let _type = m.showGenre;
-                    let _desc = m.updateInfo || m.subtitle;
-                    let JJ = m.desc;
-                    let _title = m.introTitle;
-                    VOD.vod_pic = img;
-                    VOD.vod_name = _title;
-                    VOD.vod_type = _type;
-                    VOD.vod_remarks = _desc;
-                    VOD.vod_content = JJ
+                    /* 优酷改版过详情页数据结构,现在详情在 moduleList 里:
+                       moduleList[0].components[0].itemList[0] 有 introTitle/showImgV/desc
+                       旧结构是 data.data.extra.showImgV + model.detail.data.nodes[0]...
+                       两种都兼容,取到哪个用哪个 */
+                    let m = null;
+                    let img = "";
+                    let extra = null;
+                    try {
+                        extra = json.data.data.data.extra;
+                        img = extra.showImgV || "";
+                    } catch (e1) {}
+                    if (json.moduleList && json.moduleList.length) {
+                        let comps = json.moduleList[0].components || [];
+                        for (let ci = 0; ci < comps.length && !m; ci++) {
+                            let il = comps[ci].itemList || [];
+                            for (let ii = 0; ii < il.length && !m; ii++) {
+                                if (il[ii].introTitle) { m = il[ii]; }
+                            }
+                        }
+                    }
+                    if (!m) {
+                        try {
+                            let nd = json.data.model.detail.data.nodes[0].nodes[0].nodes[0].data;
+                            m = nd;
+                        } catch (e2) {}
+                    }
+                    if (m) {
+                        img = img || m.showImgV || m.showImg || "";
+                        VOD.vod_pic = img;
+                        VOD.vod_name = m.introTitle || m.showName || "";
+                        VOD.vod_type = m.showGenre || "";
+                        VOD.vod_remarks = m.updateInfo || m.subtitle || "";
+                        VOD.vod_content = m.desc || "";
+                    } else {
+                        VOD.vod_pic = _img;
+                        VOD.vod_name = video_lists[0].title.replace(/(\d+)/g, "");
+                        VOD.vod_content = "未取到详情(优酷改版数据结构变更),不影响播放(" + ourl + ")";
+                        VOD.vod_remarks = name;
+                    }
                 } catch (e) {
                     log("海报渲染发生错误:" + e.message);
-                    print(json);
+                    VOD.vod_pic = _img;
+                    VOD.vod_name = video_lists[0].title.replace(/(\d+)/g, "");
                     VOD.vod_remarks = name
                 }
             }
@@ -2480,7 +2511,9 @@ var rule = {
             return urlencode(url)
         }
 
-        play_url = play_url.replace("&play_url=", "&type=json&play_url=");
+        /* play_url 是引擎 eval 里的 var(恒为 ""), 规则顶层配置的优先 */
+        let pUrl = (rule.play_url && rule.play_url.trim()) ? rule.play_url.trim() : play_url;
+        pUrl = pUrl.replace("&play_url=", "&type=json&play_url=");
         video_lists.forEach(function(it) {
             let url = "https://v.youku.com/v_show/id_" + it.videoId + ".html";
             if (it.thumbUrl) {
@@ -2488,12 +2521,12 @@ var rule = {
                     desc: it.showVideoStage ? it.showVideoStage.replace("期", "集") : it.displayName,
                     pic_url: it.thumbUrl,
                     title: it.title,
-                    url: play_url + adhead(url)
+                    url: pUrl + adhead(url)
                 })
             } else if (name !== "优酷") {
                 d.push({
                     title: it.displayName ? it.displayName : it.title,
-                    url: play_url + adhead(it.url)
+                    url: pUrl + adhead(it.url)
                 })
             }
         });
@@ -2506,13 +2539,21 @@ var rule = {
 
     搜索: $js.toString(() => {
         var d = [];
-        let html = request(input);
+        /* 引擎做的是 searchUrl.replaceAll("**", wd),不做 URL 编码 ——
+           中文关键字直接拼进 URL 会让上游收到坏字节(showId 里出现 \ufffd)。
+           这里自己用 KEY 重新拼 URL 并编码。 */
+        let searchKeyword = '';
+        let kw = '';
+        try { kw = encodeURIComponent(KEY); } catch (e) { kw = KEY; }
+        /* 注意: input 是引擎 eval 里已声明的 var,不能重复 let/var 声明,
+           这里用独立变量名 searchInput */
+        let searchInput = rule.searchUrl.replaceAll('**', kw);
+        let html = request(searchInput);
         let json = JSON.parse(html);
 
-        let searchKeyword = '';
-        if (input.includes('keyword=')) {
-            searchKeyword = input.split('keyword=')[1].split('&')[0];
-            searchKeyword = decodeURIComponent(searchKeyword);
+        if (searchInput.includes('keyword=')) {
+            searchKeyword = searchInput.split('keyword=')[1].split('&')[0];
+            try { searchKeyword = decodeURIComponent(searchKeyword); } catch (e2) {}
         }
 
         let titleFilterConfig = {

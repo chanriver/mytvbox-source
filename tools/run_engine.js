@@ -18,12 +18,9 @@ const ENGINE = path.join(__dirname, 'lib', 'drpy2.min.js');
 globalThis.env = { isNew: true, isJS: true, isPy: false, isCF: false, isFF: false, isIOS: false, isAndroid: true, isTV: true };
 globalThis.EXT = {};
 globalThis.Env = globalThis.env;
-globalThis.local = {
-    get: async (url) => {
-        const r = await fetch(url);
-        return { content: await r.text(), headers: Object.fromEntries(r.headers) };
-    }
-};
+/* 注意: 不要在这里定义 globalThis.local ——
+   jar 侧的 local 是 KV 存储 (get/set/del),有些规则(如优酷)用它做反爬缓存。
+   真实 KV shim 在 tools/pdfh_shim.js 里提供。 */
 
 const PROXY = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || '';
 const NO_PROXY = process.env.NO_PROXY || '';
@@ -68,7 +65,15 @@ function curlSync(url, obj = {}) {
 
 globalThis.req = (url, obj = {}) => curlSync(url, obj);
 globalThis.log = (...a) => console.log(...a);
-globalThis.print = (...a) => console.log(...a);
+globalThis.print = (...a) => {
+    const msg = a.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join(' ');
+    // 规则 debug 输出可能很大(整页 HTML / 整个 JSON),超长就截断
+    if (msg.length > 400) {
+        console.log(msg.slice(0, 400) + ` ...[截断,共${msg.length}字符]`);
+        return;
+    }
+    console.log(msg);
+};
 
 const { default: makeShims } = await import('./pdfh_shim.js');
 await makeShims();
@@ -83,7 +88,12 @@ console.log(`规则: ${path.basename(rulePath)}`);
 console.log(`引擎: ${ENGINE}`);
 console.log();
 
+/* 引擎 init 时会把整个 rule 对象 dump 出来(优酷规则有几十万字),
+   太占屏幕 —— 这里临时把 console.log 静音,只留我们的输出 */
+const _realLog = console.log;
+console.log = () => {};
 DRPY.init(ruleSrc);
+console.log = _realLog;
 console.log(`站点名: ${DRPY.getRule('title')}`);
 console.log();
 
