@@ -1270,14 +1270,7 @@
       "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
       "ext": "https://tvbox1.361026.xyz/js/奇珍异兽.js"
     },
-    {
-      "key": "drpy_js_菜狗",
-      "name": "官源 • 搜狗",
-      "type": 3,
-      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
-      "ext": "https://tvbox1.361026.xyz/js/菜狗.js"
-    },
-    {
+        {
       "key": "drpy_js_优酷",
       "name": "官源 • 优酷",
       "type": 3,
@@ -1291,28 +1284,14 @@
       "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
       "ext": "https://tvbox1.361026.xyz/js/Anime1动畫.js"
     },
-    {
-      "key": "drpy_js_NT动漫",
-      "name": "动漫 • NT动漫",
-      "type": 3,
-      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
-      "ext": "https://tvbox1.361026.xyz/js/NT动漫.js"
-    },
-    {
+        {
       "key": "drpy_js_路漫漫",
       "name": "动漫 • 路漫漫",
       "type": 3,
       "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
       "ext": "https://tvbox1.361026.xyz/js/路漫漫.js"
     },
-    {
-      "key": "drpy_js_去看吧",
-      "name": "动漫 • 去看吧",
-      "type": 3,
-      "api": "https://tvbox1.361026.xyz/lib/drpy2.min.js",
-      "ext": "https://tvbox1.361026.xyz/js/去看吧.js"
-    },
-    {
+        {
       "key": "bb",
       "name": "配置接口完全免费",
       "type": 3,
