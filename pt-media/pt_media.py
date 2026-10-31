@@ -234,8 +234,13 @@ class Lib:
             for s in shows:
                 rel = os.path.relpath(s["dir"], MEDIA_ROOT)
                 parts = rel.split(os.sep)
-                cat = parts[0] if len(parts) > 1 else "其他"
-                cats.setdefault(cat, []).append(s)
+                top = parts[0] if len(parts) > 1 else "其他"
+                cats.setdefault(top, []).append(s)
+                # 二级目录也作为独立分类(国产剧 / 美剧 / 日剧 ...),
+                # 让电视上不止一个 tab 可选
+                if len(parts) > 2:
+                    sub = top + "/" + parts[1]
+                    cats.setdefault(sub, []).append(s)
             self.cache = {"shows": shows, "cats": cats, "at": time.time()}
             print(f"[scan] {len(shows)} 部剧 / {len(cats)} 个分类", flush=True)
             return self.cache
@@ -345,28 +350,77 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             return self._send(500, f"error: {e}")
 
+    @staticmethod
+    def _resolve_cat(data, t):
+        """按分类标识取剧集。
+
+        客户端会用分类的 type_id(数字)来请求,也可能直接用分类名,
+        两种都要认。type_id 的分配规则和 videolist 响应保持一致:
+        按 data["cats"] 的插入顺序从 1 开始编号。
+        """
+        t = (t or "").strip()
+        if t in data["cats"]:
+            return data["cats"][t]
+        # "电视剧/国产剧" 形式的二级分类名
+        if "/" in t:
+            sub = t.split("/", 1)[1].strip()
+            key = None
+            for k in data["cats"]:
+                if k.endswith("/" + sub):
+                    key = k
+                    break
+            if key:
+                return data["cats"][key]
+        # 当作 type_id 数字
+        try:
+            idx = int(t) - 1
+            cats = list(data["cats"].items())
+            if 0 <= idx < len(cats):
+                return cats[idx][1]
+        except (ValueError, TypeError):
+            pass
+        # URL 解码后再试一次
+        try:
+            from urllib.parse import unquote
+            dec = unquote(t)
+            if dec in data["cats"]:
+                return data["cats"][dec]
+        except Exception:
+            pass
+        return []
+
     # --- CMS ---
     def _cms(self, qs):
         ac = (qs.get("ac") or ["list"])[0]
         data = LIB.scan()
 
         if ac == "videolist":
-            # 带 t= 就是列某分类
+            # 带 t= 就是列某分类的剧(jar 里就是 ac=videolist&t=<分类>&pg=1)
             t = (qs.get("t") or [""])[0]
             if t:
-                shows = data["cats"].get(t, [])
+                shows = self._resolve_cat(data, t)
+                # 客户端用 &pg=<页码> 分页,每页 20 部
+                try:
+                    pg = int((qs.get("pg") or ["1"])[0])
+                except (ValueError, TypeError):
+                    pg = 1
+                if pg > 1:
+                    shows = shows[(pg - 1) * 20: pg * 20]
                 return self._send(200, vod_xml([show_to_vod(s) for s in shows]),
                                   "text/xml; charset=utf-8")
-            # 无 t -> 返回分类列表
-            items = []
-            for cat, shows in data["cats"].items():
-                items.append({
-                    "id": cat, "name": cat, "pic": "", "sub": "",
-                    "remarks": f"{len(shows)}部", "year": "", "area": "",
-                    "type": "", "actor": "", "director": "", "content": "",
-                    "play_from": "", "play_url": "",
-                })
-            return self._send(200, vod_xml(items), "text/xml; charset=utf-8")
+
+            # 无 t -> 返回分类列表。
+            # 影视仓客户端解析的分类格式是纯 JSON 数组:
+            #   [{"type_id":"1","type_name":"电影"}, ...]
+            # 之前这里返回的是 <list><video> XML,客户端解析不到分类,
+            # 结果就是源在界面上没有 tab。
+            cats = []
+            for idx, (cat, shows) in enumerate(data["cats"].items(), start=1):
+                # 二级分类内部用 "顶层/子类" 存,显示时只给子类名
+                label = cat.split("/", 1)[1] if "/" in cat else cat
+                cats.append({"type_id": str(idx), "type_name": label})
+            body = json.dumps(cats, ensure_ascii=False)
+            return self._send(200, body, "application/json; charset=utf-8")
 
         if ac == "detail":
             ids = (qs.get("ids") or [""])[0]
@@ -391,6 +445,13 @@ class Handler(BaseHTTPRequestHandler):
                        or any(w in a["name"].lower() for a in s["actor"])]
         else:
             matched = data["shows"]
+        # 分页
+        try:
+            pg = int((qs.get("pg") or ["1"])[0])
+        except (ValueError, TypeError):
+            pg = 1
+        if pg > 1:
+            matched = matched[(pg - 1) * 20: pg * 20]
         return self._send(200, vod_xml([show_to_vod(s) for s in matched]),
                           "text/xml; charset=utf-8")
 
