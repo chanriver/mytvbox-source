@@ -68,7 +68,8 @@
   "filterable": 0,
   "changeable": 0,
   "timeout": 15000,
-  "retry": 2
+  "retry": 2,
+  "categories": ["电视剧", "国产剧"]
 },
 {
       "key": "tv_local",

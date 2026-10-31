@@ -361,16 +361,13 @@ class Handler(BaseHTTPRequestHandler):
         t = (t or "").strip()
         if t in data["cats"]:
             return data["cats"][t]
-        # "电视剧/国产剧" 形式的二级分类名
-        if "/" in t:
-            sub = t.split("/", 1)[1].strip()
-            key = None
+        # 二级分类: 内部键是 "电视剧/国产剧",但客户端传的是纯 "国产剧"
+        # (配置里的 categories 只写子类名)。两种写法都要认。
+        sub = t.split("/", 1)[1].strip() if "/" in t else t
+        if sub:
             for k in data["cats"]:
-                if k.endswith("/" + sub):
-                    key = k
-                    break
-            if key:
-                return data["cats"][key]
+                if k == sub or k.endswith("/" + sub):
+                    return data["cats"][k]
         # 当作 type_id 数字
         try:
             idx = int(t) - 1
@@ -394,7 +391,18 @@ class Handler(BaseHTTPRequestHandler):
         ac = (qs.get("ac") or ["list"])[0]
         data = LIB.scan()
 
-        if ac == "videolist":
+        if ac in ("videolist", "classify", "cate", "category"):
+            # 带 wd= 视为搜索
+            wd_v = (qs.get("wd") or [""])[0].strip()
+            if wd_v and not (qs.get("t") or [""])[0]:
+                w = wd_v.lower()
+                matched = [s for s in data["shows"]
+                           if w in s["title"].lower()
+                           or w in s["plot"].lower()
+                           or any(w in g.lower() for g in s["genre"])
+                           or any(w in a["name"].lower() for a in s["actor"])]
+                return self._send(200, vod_xml([show_to_vod(s) for s in matched]),
+                                  "text/xml; charset=utf-8")
             # 带 t= 就是列某分类的剧(jar 里就是 ac=videolist&t=<分类>&pg=1)
             t = (qs.get("t") or [""])[0]
             if t:
@@ -423,6 +431,17 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, body, "application/json; charset=utf-8")
 
         if ac == "detail":
+            # 有些 CMS 客户端用 ac=detail&wd=<kw> 做搜索(Appfox 变体)
+            wd_d = (qs.get("wd") or [""])[0].strip()
+            if wd_d and not (qs.get("ids") or [""])[0]:
+                w = wd_d.lower()
+                matched = [s for s in data["shows"]
+                           if w in s["title"].lower()
+                           or w in s["plot"].lower()
+                           or any(w in g.lower() for g in s["genre"])
+                           or any(w in a["name"].lower() for a in s["actor"])]
+                return self._send(200, vod_xml([show_to_vod(s) for s in matched]),
+                                  "text/xml; charset=utf-8")
             ids = (qs.get("ids") or [""])[0]
             target = None
             for s in data["shows"]:
@@ -434,7 +453,20 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, vod_xml([show_to_vod(target)]),
                               "text/xml; charset=utf-8")
 
-        # ac=list  -> 搜索
+        # ac=list  -> 搜索 / 按分类过滤
+        # 带 t=<分类> 时按分类取(客户端用配置里的 categories 时走这条路)
+        t_l = (qs.get("t") or [""])[0].strip()
+        if t_l:
+            matched = self._resolve_cat(data, t_l)
+            try:
+                pg = int((qs.get("pg") or ["1"])[0])
+            except (ValueError, TypeError):
+                pg = 1
+            if pg > 1:
+                matched = matched[(pg - 1) * 20: pg * 20]
+            return self._send(200, vod_xml([show_to_vod(s) for s in matched]),
+                              "text/xml; charset=utf-8")
+
         wd = (qs.get("wd") or [""])[0].strip()
         if wd:
             w = wd.lower()
