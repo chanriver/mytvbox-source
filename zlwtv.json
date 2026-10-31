@@ -59,6 +59,18 @@
   }
 },
     {
+  "key": "pt_media",
+  "name": "💾 NAS 片库",
+  "type": 0,
+  "api": "http://192.168.3.194:3150/api.php/provide/vod/at/xml/",
+  "searchable": 1,
+  "quickSearch": 1,
+  "filterable": 0,
+  "changeable": 0,
+  "timeout": 15000,
+  "retry": 2
+},
+{
       "key": "tv_local",
       "name": "💾 电视存储",
       "type": 3,
