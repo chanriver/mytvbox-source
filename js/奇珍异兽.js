@@ -901,7 +901,7 @@ var rule = {
     headers: {
         'User-Agent': 'MOBILE_UA'
     },
-    timeout: 5000,
+    timeout: 15000,
     class_name: '电视剧&短剧&电影&综艺&少儿&动漫&漫剧&纪录片&知识',
     class_url: '2&35&1&6&15&4&37&3&31',
     limit: 20,

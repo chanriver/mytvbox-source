@@ -719,7 +719,7 @@ var rule = {
     headers: {
         'User-Agent': 'MOBILE_UA'
     },
-    timeout: 5000,
+    timeout: 15000,
     class_name: '电视剧&电影&综艺&动漫',
     class_url: '2&1&3&4',
     limit: 5,

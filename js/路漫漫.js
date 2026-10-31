@@ -391,7 +391,7 @@ var rule = {
     headers: {
         "User-Agent": "MOBILE_UA"
     },
-    timeout: 5000,
+    timeout: 15000,
     class_name: "日本动漫&国产动漫&欧美动漫&日本动画电影&国产动画电影&欧美动画电影",
     class_url: "6&7&8&3&4&5",
     class_parse: "",
@@ -490,7 +490,7 @@ var rule = {
                             act: act,
                             play: play,
                         },
-                        timeout: 5000
+                        timeout: 15000
                     })
                 );
                 input = {
