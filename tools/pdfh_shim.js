@@ -38,7 +38,7 @@ async function makeShims() {
     let cheerio;
     try {
         const req = (await import('module')).createRequire(import.meta.url);
-        const c = req(path.join(__dirname, 'node', 'node_modules', 'cheerio'));
+        const c = req(path.join(__dirname, 'tools', 'node', 'node_modules', 'cheerio'));
         cheerio = c;
     } catch (e) {
         console.error('无法加载 cheerio(需在 tools/node 下 npm install cheerio):', e.message);

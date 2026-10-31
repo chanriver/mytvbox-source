@@ -38,11 +38,14 @@ function needsProxy(u) {
 import { execFileSync } from 'child_process';
 
 let lastReqAt = 0;
+let reqSeq = 0;
 
 function curlSync(url, obj = {}) {
     // 注意: api.cntv.cn 有随机风控(间歇性返回 errcode 1003),
     // 规则内部已做重试,这里不再额外加间隔,避免拖慢测试
-    const args = ['-sSL', '--max-time', String(Math.ceil((obj.timeout || 15000) / 1000)), '-w', '\\n__HDR__%{http_code}'];
+    const hdrFile = '/tmp/_req_hdr_' + process.pid + '_' + (reqSeq++);
+    const args = ['-sSL', '--max-time', String(Math.ceil((obj.timeout || 15000) / 1000)),
+        '-D', hdrFile, '-w', '\\n__HDR__%{http_code}'];
     const headers = obj.headers || {};
     for (const [k, v] of Object.entries(headers)) {
         if (v === undefined || v === null) continue;
@@ -60,7 +63,31 @@ function curlSync(url, obj = {}) {
     const idx = out.lastIndexOf('\n__HDR__');
     const content = idx >= 0 ? out.slice(0, idx) : out;
     const code = idx >= 0 ? parseInt(out.slice(idx + 8).trim(), 10) : 0;
-    return { content, headers: { 'content-type': 'application/json', status: String(code) } };
+
+    /* jar 的 req() 返回 {content, headers},headers 含 set-cookie 等响应头。
+       withHeaders 的规则(咪咕/anime1)靠它拿 cookie —— 这里必须真解析。 */
+    const hdrs = { 'content-type': 'application/json', status: String(code) };
+    try {
+        const head = fs.readFileSync(hdrFile, 'utf8');
+        // 可能有多个 header 块(重定向),取最后一个
+        const blocks = head.split(/\r?\n\r?\n/).filter(b => b.trim());
+        const lastBlock = blocks[blocks.length - 1] || '';
+        for (const line of lastBlock.split(/\r?\n/)) {
+            const c = line.indexOf(':');
+            if (c <= 0) continue;
+            const k = line.slice(0, c).trim();
+            const v = line.slice(c + 1).trim();
+            const lk = k.toLowerCase();
+            if (lk === 'set-cookie') {
+                if (!hdrs['set-cookie']) hdrs['set-cookie'] = [];
+                hdrs['set-cookie'].push(v);
+            } else {
+                hdrs[lk] = v;
+            }
+        }
+    } catch (e) { /* 无 header 文件就跳过 */ }
+    try { fs.unlinkSync(hdrFile); } catch (e) {}
+    return { content, headers: hdrs };
 }
 
 globalThis.req = (url, obj = {}) => curlSync(url, obj);
