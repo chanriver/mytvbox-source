@@ -37,6 +37,15 @@
       "api": "csp_YGP",
       "searchable": 0
     },
+     {
+      "key": "青青草",
+      "name": "青青草",
+      "type": 0,
+      "api": "https://www.caiji05.com/home/cjapi/cfda/mc/vod/xml",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
     {
       "key": "新闪雷",
       "name": "新闪雷 • MP4",
