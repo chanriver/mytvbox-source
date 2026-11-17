@@ -1,0 +1,13 @@
+{
+  "sites": [
+    {
+      "key": "nas_drama",
+      "name": "NAS 短剧库",
+      "type": 1,
+      "api": "http://zlwnas.mycloudnas.com:8088/api.php/tvbox",
+      "filter": {
+        "url": "http://zlwnas.mycloudnas.com:8088/api.php/tvbox"
+      }
+    }
+  ]
+}
